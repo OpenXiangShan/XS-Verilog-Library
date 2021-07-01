@@ -1,1 +1,3 @@
 # XS-Verilog-Library
+
+如果你对香山处理器感兴趣，希望参与到香山处理器的开发中，但又对Chisel/Scala不熟悉，那么你可以使用Verilog/System Verilog进行开发，并在本仓库中提出Pull Request，熟悉Chisel和Scala的开发者会将你的代码用Chisel重写并merge到香山中，重写的Chisel代码中会保留你的姓名，并会附上一个指向你在本仓库中代码的链接。
