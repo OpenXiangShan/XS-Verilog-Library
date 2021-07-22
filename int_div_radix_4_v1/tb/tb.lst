@@ -1,0 +1,10 @@
++incdir+../tb/
+
+# RTL
+
+-f ../rtl/int_div_radix_4_v1_rtl.lst
+
+
+# TB file
+../tb/tb_top.sv
+
