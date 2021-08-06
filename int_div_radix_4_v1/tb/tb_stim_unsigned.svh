@@ -39,6 +39,15 @@
 
 opcode = OPCODE_UNSIGNED;
 
+dividend_64 = 64'h890f_e60b_30c6_e11d;
+divisor_64 = 64'h0013_cd5c_1b80_4af8;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
+
 dividend_64 = 4245582384;
 divisor_64 = 3759407232;
 dividend_32 = dividend_64[32-1:0];
@@ -47,8 +56,8 @@ dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-dividend_64 = 4245582384;
-divisor_64 = 1879703616;
+dividend_64 = 1993410489;
+divisor_64 = 7864320;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];

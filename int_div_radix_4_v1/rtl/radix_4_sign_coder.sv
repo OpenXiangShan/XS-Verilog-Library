@@ -44,7 +44,7 @@ module radix_4_sign_coder #(
 	
 )(
 	input  logic sd_m_neg_1_sign_i,
-	input  logic sd_m_0_sign_i,
+	input  logic sd_m_neg_0_sign_i,
 	input  logic sd_m_pos_1_sign_i,
 	input  logic sd_m_pos_2_sign_i,
 	output logic [5-1:0] quot_o
@@ -81,7 +81,7 @@ logic [4-1:0] sign;
 
 // Just look at "TABLE 2" in 
 // "Digit-Recurrence Dividers with Reduced Logical Depth", Elisardo Antelo.
-assign sign = {sd_m_pos_2_sign_i, sd_m_pos_1_sign_i, sd_m_0_sign_i, sd_m_neg_1_sign_i};
+assign sign = {sd_m_pos_2_sign_i, sd_m_pos_1_sign_i, sd_m_neg_0_sign_i, sd_m_neg_1_sign_i};
 assign quot_o[QUOT_POS_2] = (sign[3:1] == 3'b000);
 assign quot_o[QUOT_POS_1] = (sign[3:1] == 3'b100);
 assign quot_o[QUOT_ZERO ] = (sign[2:1] == 2'b10);

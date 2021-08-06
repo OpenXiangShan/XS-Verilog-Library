@@ -39,6 +39,14 @@
 
 opcode = OPCODE_SIGNED;
 
+dividend_64 = 64'hb338_d6e1_4a76_0a6d;
+divisor_64 = 64'hffd8_09e6_11a0_22a9;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
 dividend_64 = 99;
 divisor_64 = -10;
 dividend_32 = dividend_64[32-1:0];

@@ -69,11 +69,11 @@ localparam DUT_WIDTH = 64;
 localparam OPCODE_SIGNED = 1'b1;
 localparam OPCODE_UNSIGNED = 1'b0;
 
-localparam SIGNED_SINGLE_TEST_NUM = 7;
-localparam SIGNED_RANDOM_TEST_NUM = 2 ** 10;
+localparam SIGNED_SINGLE_TEST_NUM = 9;
+localparam SIGNED_RANDOM_TEST_NUM = 2 ** 15;
 localparam SIGNED_TEST_NUM = SIGNED_SINGLE_TEST_NUM + SIGNED_RANDOM_TEST_NUM;
 localparam UNSIGNED_SINGLE_TEST_NUM = 8;
-localparam UNSIGNED_RANDOM_TEST_NUM = 2 ** 10;
+localparam UNSIGNED_RANDOM_TEST_NUM = 2 ** 15;
 localparam UNSIGNED_TEST_NUM = UNSIGNED_SINGLE_TEST_NUM + UNSIGNED_RANDOM_TEST_NUM;
 
 localparam TEST_NUM = SIGNED_TEST_NUM + UNSIGNED_TEST_NUM;
@@ -202,8 +202,9 @@ initial begin
 	`APPL_WAIT_CYC(clk, 2)
 	acq_trig = 0;
 
-	`include "tb_stim_unsigned.svh"
 	`include "tb_stim_signed.svh"
+	`include "tb_stim_unsigned.svh"
+	
 
 	`WAIT_CYC(clk, 20)
 	stim_end = 1;
