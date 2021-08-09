@@ -52,8 +52,10 @@ module radix_4_qds_v1 #(
 	input  logic [WIDTH-1:0] divisor_i,
 	input  logic [5-1:0] qds_para_neg_1_i,
 	input  logic [3-1:0] qds_para_neg_0_i,
-	input  logic [1-1:0] qds_para_pos_1_i,
+	// input  logic [1-1:0] qds_para_pos_1_i,
+	input  logic [2-1:0] qds_para_pos_1_i,
 	input  logic [5-1:0] qds_para_pos_2_i,
+	input  logic special_divisor_i,
 	input  logic [QUOT_ONEHOT_WIDTH-1:0] prev_quot_digit_i,
 	output logic [QUOT_ONEHOT_WIDTH-1:0] quot_digit_o
 );
@@ -131,9 +133,15 @@ assign rem_carry_mul_16_trunc_3_4 = rem_carry_mul_16[(ITN_WIDTH + 1) -: 7];
 // Calculate the parameters for CMP.
 // ================================================================================================================================================
 assign para_m_neg_1_trunc_2_5 = {1'b0, qds_para_neg_1_i, 1'b0};
-assign para_m_neg_0_trunc_3_4 = {3'b0, qds_para_neg_0_i, 1'b0};
-assign para_m_pos_1_trunc_3_4 = {4'b1111, ~qds_para_pos_1_i, qds_para_pos_1_i, 1'b0};
-assign para_m_pos_2_trunc_2_5 = {1'b1,  qds_para_pos_2_i, 1'b0};
+
+// assign para_m_neg_0_trunc_3_4 = {3'b0, qds_para_neg_0_i, 1'b0};
+assign para_m_neg_0_trunc_3_4 = {3'b0, qds_para_neg_0_i, special_divisor_i};
+
+// assign para_m_pos_1_trunc_3_4 = {4'b1111, ~qds_para_pos_1_i, qds_para_pos_1_i, 1'b0};
+// assign para_m_pos_1_trunc_3_4 = {4'b1111, ~qds_para_pos_1_i, qds_para_pos_1_i, special_divisor_i};
+assign para_m_pos_1_trunc_3_4 = {4'b1111, qds_para_pos_1_i, special_divisor_i};
+
+assign para_m_pos_2_trunc_2_5 = {1'b1, qds_para_pos_2_i, 1'b0};
 
 // ================================================================================================================================================
 // Calculate "-4 * q * D" for CMP.
@@ -141,9 +149,13 @@ assign para_m_pos_2_trunc_2_5 = {1'b1,  qds_para_pos_2_i, 1'b0};
 assign divisor = {1'b0, divisor_i, 3'b0};
 assign divisor_mul_4 = {divisor, 2'b0};
 assign divisor_mul_8 = {divisor[ITN_WIDTH-2:0], 3'b0};
-// Just use the inverted value for CMP, don't need to use a full-adder to get its inversed value.
-assign divisor_mul_neg_4 = {~divisor, 2'b0};
-assign divisor_mul_neg_8 = {~{divisor[ITN_WIDTH-2:0], 1'b0}, 2'b0};
+
+assign divisor_mul_neg_4 = ~{divisor, 2'b0};
+assign divisor_mul_neg_8 = ~{divisor[ITN_WIDTH-2:0], 1'b0, 2'b0};
+// TODO: Use a Full adder ???
+// assign divisor_mul_neg_4 = -{divisor, 2'b0};
+// assign divisor_mul_neg_8 = -{divisor[ITN_WIDTH-2:0], 1'b0, 2'b0};
+
 // The decimal point is between "[ITN_WIDTH-1]" and "[ITN_WIDTH-2]".
 assign divisor_mul_4_trunc_2_5 = divisor_mul_4[(ITN_WIDTH    ) -: 7];
 assign divisor_mul_4_trunc_3_4 = divisor_mul_4[(ITN_WIDTH + 1) -: 7];
@@ -189,6 +201,8 @@ u_sd_m_neg_1 (
 	.rem_carry_msb_i(rem_carry_mul_16_trunc_2_5),
 	.parameter_i(para_m_neg_1_trunc_2_5),
 	.divisor_i(divisor_for_sd_trunc_2_5),
+	// TODO: Is this needed ??
+	.cin_i(1'b0),
 	.sign_o(sd_m_neg_1_sign)
 );
 radix_4_sign_detector
@@ -197,6 +211,8 @@ u_sd_m_neg_0 (
 	.rem_carry_msb_i(rem_carry_mul_16_trunc_3_4),
 	.parameter_i(para_m_neg_0_trunc_3_4),
 	.divisor_i(divisor_for_sd_trunc_3_4),
+	// TODO: Is this needed ??
+	.cin_i(rem_sum_mul_16_trunc_2_5[0] & rem_carry_mul_16_trunc_2_5[0]),
 	.sign_o(sd_m_neg_0_sign)
 );
 radix_4_sign_detector
@@ -205,6 +221,8 @@ u_sd_m_pos_1 (
 	.rem_carry_msb_i(rem_carry_mul_16_trunc_3_4),
 	.parameter_i(para_m_pos_1_trunc_3_4),
 	.divisor_i(divisor_for_sd_trunc_3_4),
+	// TODO: Is this needed ??
+	.cin_i(rem_sum_mul_16_trunc_2_5[0] & rem_carry_mul_16_trunc_2_5[0]),
 	.sign_o(sd_m_pos_1_sign)
 );
 radix_4_sign_detector
@@ -213,6 +231,8 @@ u_sd_m_pos_2 (
 	.rem_carry_msb_i(rem_carry_mul_16_trunc_2_5),
 	.parameter_i(para_m_pos_2_trunc_2_5),
 	.divisor_i(divisor_for_sd_trunc_2_5),
+	// TODO: Is this needed ??
+	.cin_i(1'b0),
 	.sign_o(sd_m_pos_2_sign)
 );
 

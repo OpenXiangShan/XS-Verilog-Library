@@ -47,8 +47,8 @@ dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-dividend_64 = 99;
-divisor_64 = -10;
+dividend_64 = 32'h8d201e54;
+divisor_64 = 32'hfff10513;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
@@ -104,11 +104,33 @@ divisor_16 = -1;
 `SINGLE_STIM
 
 for(i = 0; i < SIGNED_RANDOM_TEST_NUM; i++) begin
-	dividend_64 = {$urandom(), $urandom()};
-	divisor_64 = {$urandom(), $urandom()};
-	dividend_32 = dividend_64[32-1:0];
-	divisor_32 = divisor_64[32-1:0];
-	dividend_16 = dividend_64[16-1:0];
-	divisor_16 = divisor_64[16-1:0];
+	// Make sure divisor_lzc >= dividend_lzc, so "ITER" is always needed.
+	dividend_64_lzc = $urandom() % 64;
+	dividend_32_lzc = $urandom() % 32;
+	dividend_16_lzc = $urandom() % 16;
+	divisor_64_lzc = ($urandom() % (64 - dividend_64_lzc)) + dividend_64_lzc;
+	divisor_32_lzc = ($urandom() % (32 - dividend_32_lzc)) + dividend_32_lzc;
+	divisor_16_lzc = ($urandom() % (16 - dividend_16_lzc)) + dividend_16_lzc;
+
+	std::randomize(dividend_64);
+	dividend_64[63] = 1'b1;
+	dividend_64 = dividend_64 >> dividend_64_lzc;
+	std::randomize(divisor_64);
+	divisor_64[63] = 1'b1;
+	divisor_64 = divisor_64 >> divisor_64_lzc;
+
+	std::randomize(dividend_32);
+	dividend_32[31] = 1'b1;
+	dividend_32 = dividend_32 >> dividend_32_lzc;
+	std::randomize(divisor_32);
+	divisor_32[31] = 1'b1;
+	divisor_32 = divisor_32 >> divisor_32_lzc;
+
+	std::randomize(dividend_16);
+	dividend_16[15] = 1'b1;
+	dividend_16 = dividend_16 >> dividend_16_lzc;
+	std::randomize(divisor_16);
+	divisor_16[15] = 1'b1;
+	divisor_16 = divisor_16 >> divisor_16_lzc;
 	`SINGLE_STIM
 end

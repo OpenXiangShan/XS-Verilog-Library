@@ -60,7 +60,10 @@ add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top
 add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/csa_3_2_x1
 add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/csa_3_2_x2
 add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/csa_3_2_x3
+
+add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/iter_quot_nxt
 add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/iter_quot_q
+add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/iter_quot_minus_1_nxt
 add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/iter_quot_minus_1_q
 
 add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/para_m_neg_1_trunc_2_5
@@ -68,16 +71,22 @@ add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top
 add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/para_m_pos_1_trunc_3_4
 add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/para_m_pos_2_trunc_2_5
 
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_4_trunc_2_5
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_4_trunc_3_4
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_8_trunc_2_5
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_8_trunc_3_4
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_neg_4_trunc_2_5
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_neg_4_trunc_3_4
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_neg_8_trunc_2_5
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_neg_8_trunc_3_4
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_for_sd_trunc_3_4
-add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/divisor_for_sd_trunc_2_5
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_4_trunc_2_5
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_4_trunc_3_4
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_8_trunc_2_5
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_8_trunc_3_4
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_neg_4_trunc_2_5
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_neg_4_trunc_3_4
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_neg_8_trunc_2_5
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_mul_neg_8_trunc_3_4
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_for_sd_trunc_3_4
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/divisor_for_sd_trunc_2_5
+
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/rem_sum_mul_16_trunc_2_5
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/rem_sum_mul_16_trunc_3_4
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/rem_carry_mul_16_trunc_2_5
+add wave -position insertpoint -expand -group srt_iter -radix binary sim:/tb_top/g_dut_16/dut/u_qds/rem_carry_mul_16_trunc_3_4
+
 add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/sd_m_neg_1_sign
 add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/sd_m_neg_0_sign
 add wave -position insertpoint -expand -group srt_iter sim:/tb_top/g_dut_16/dut/u_qds/sd_m_pos_1_sign

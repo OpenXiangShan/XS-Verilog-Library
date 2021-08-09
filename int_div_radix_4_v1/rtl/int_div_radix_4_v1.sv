@@ -201,12 +201,14 @@ logic qds_para_neg_0_en;
 logic [3-1:0] qds_para_neg_0_d;
 logic [3-1:0] qds_para_neg_0_q;
 logic qds_para_pos_1_en;
-logic [1-1:0] qds_para_pos_1_d;
-logic [1-1:0] qds_para_pos_1_q;
+logic [2-1:0] qds_para_pos_1_d;
+logic [2-1:0] qds_para_pos_1_q;
 logic qds_para_pos_2_en;
 logic [5-1:0] qds_para_pos_2_d;
 logic [5-1:0] qds_para_pos_2_q;
-
+logic special_divisor_en;
+logic special_divisor_d;
+logic special_divisor_q;
 
 logic [ITN_WIDTH-1:0] rem_sum_normal_init_value;
 logic [ITN_WIDTH-1:0] rem_sum_init_value;
@@ -432,8 +434,8 @@ assign qds_para_neg_0_en = fsm_q[FSM_PRE_1_BIT];
 // 010: m[-0] = -6, -m[-0] = +6 = 000_0110
 // 011: m[-0] = -6, -m[-0] = +6 = 000_0110
 // 100: m[-0] = -6, -m[-0] = +6 = 000_0110
-// 101: m[-0] = -6, -m[-0] = +6 = 000_0110
-// 110: m[-0] = -6, -m[-0] = +6 = 000_0110
+// 101: m[-0] = -8, -m[-0] = +8 = 000_1000
+// 110: m[-0] = -8, -m[-0] = +8 = 000_1000
 // 111: m[-0] = -8, -m[-0] = +8 = 000_1000
 // We need to use 3-bit reg.
 assign qds_para_neg_0_d = 
@@ -442,8 +444,8 @@ assign qds_para_neg_0_d =
 | ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 3'b011)
 | ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 3'b011)
 | ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 3'b011)
-| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 3'b011)
-| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 3'b011)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 3'b100)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 3'b100)
 | ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 3'b100);
 
 assign qds_para_pos_1_en = fsm_q[FSM_PRE_1_BIT];
@@ -452,20 +454,19 @@ assign qds_para_pos_1_en = fsm_q[FSM_PRE_1_BIT];
 // 001: m[+1] = +4, -m[+1] = -4 = 111_1100
 // 010: m[+1] = +4, -m[+1] = -4 = 111_1100
 // 011: m[+1] = +4, -m[+1] = -4 = 111_1100
-// 100: m[+1] = +4, -m[+1] = -4 = 111_1100
+// 100: m[+1] = +6, -m[+1] = -6 = 111_1010
 // 101: m[+1] = +6, -m[+1] = -6 = 111_1010
 // 110: m[+1] = +6, -m[+1] = -6 = 111_1010
-// 111: m[+1] = +6, -m[+1] = -6 = 111_1010
-// We can find that "-m[+1][2] = ~(-m[+1][1])" -> Just remember "-m[+1][1]".
+// 111: m[+1] = +8, -m[+1] = -8 = 111_1000
 assign qds_para_pos_1_d = 
-  ({(1){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 1'b0)
-| ({(1){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 1'b0)
-| ({(1){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 1'b0)
-| ({(1){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 1'b0)
-| ({(1){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 1'b0)
-| ({(1){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 1'b1)
-| ({(1){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 1'b1)
-| ({(1){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 1'b1);
+  ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 2'b10)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 2'b10)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 2'b10)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 2'b10)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 2'b01)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 2'b01)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 2'b01)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 2'b00);
 
 assign qds_para_pos_2_en = fsm_q[FSM_PRE_1_BIT];
 // For "normalized_d[(WIDTH - 2) -: 3]",
@@ -487,6 +488,8 @@ assign qds_para_pos_2_d =
 | ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 5'b0_1010)
 | ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b0_1010);
 
+assign special_divisor_en = fsm_q[FSM_PRE_1_BIT];
+assign special_divisor_d = (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000);
 always_ff @(posedge clk) begin
 	if(qds_para_neg_1_en)
 		qds_para_neg_1_q <= qds_para_neg_1_d;
@@ -496,6 +499,8 @@ always_ff @(posedge clk) begin
 		qds_para_pos_1_q <= qds_para_pos_1_d;
 	if(qds_para_pos_2_en)
 		qds_para_pos_2_q <= qds_para_pos_2_d;
+	if(special_divisor_en)
+		special_divisor_q <= special_divisor_d;
 end
 
 // ================================================================================================================================================
@@ -555,7 +560,7 @@ assign pre_rem_trunc_1_4 = {1'b0, rem_sum_init_value[(ITN_WIDTH - 4) -: 4]};
 // 100: m[+1] =  +6 = 0_0110;
 // 101: m[+1] =  +6 = 0_0110;
 // 110: m[+1] =  +6 = 0_0110;
-// 111: m[+1] =  +6 = 0_0110;
+// 111: m[+1] =  +8 = 0_1000;
 // =============================
 // 000: m[+2] = +12 = 0_1100;
 // 001: m[+2] = +14 = 0_1110;
@@ -574,7 +579,7 @@ assign pre_m_pos_1 =
 | ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 5'b0_0110)
 | ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 5'b0_0110)
 | ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 5'b0_0110)
-| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b0_0110);
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b0_1000);
 assign pre_m_pos_2 = 
   ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 5'b0_1100)
 | ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 5'b0_1110)
@@ -655,6 +660,7 @@ radix_4_qds_v1 #(
 	.qds_para_neg_0_i(qds_para_neg_0_q),
 	.qds_para_pos_1_i(qds_para_pos_1_q),
 	.qds_para_pos_2_i(qds_para_pos_2_q),
+	.special_divisor_i(special_divisor_q),
 	.prev_quot_digit_i(prev_quot_digit_q),
 	.quot_digit_o(quot_digit_iter_end)
 );

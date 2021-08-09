@@ -38,8 +38,8 @@
 // --------------------------------------------------------------------------------------------------------
 
 // include some definitions here
-`define MAX_ERR_COUNT 10
-`define USE_SHORT_DELAY
+`define MAX_ERR_COUNT 1
+// `define USE_SHORT_DELAY
 `include "tb_defines.svh"
 // If DUT doesn't have valid-ready control logic itself, don't use this definition.
 `define DUT_HAS_VALID_READY
@@ -64,16 +64,16 @@ module tb_top #(
 // --------------------------------------------------------------------------------------------------------
 // (local) parameters begin
 
-localparam DUT_WIDTH = 64;
+localparam DUT_WIDTH = 32;
 
 localparam OPCODE_SIGNED = 1'b1;
 localparam OPCODE_UNSIGNED = 1'b0;
 
-localparam SIGNED_SINGLE_TEST_NUM = 9;
-localparam SIGNED_RANDOM_TEST_NUM = 2 ** 15;
+localparam SIGNED_SINGLE_TEST_NUM = 8;
+localparam SIGNED_RANDOM_TEST_NUM = 2 ** 25;
 localparam SIGNED_TEST_NUM = SIGNED_SINGLE_TEST_NUM + SIGNED_RANDOM_TEST_NUM;
-localparam UNSIGNED_SINGLE_TEST_NUM = 8;
-localparam UNSIGNED_RANDOM_TEST_NUM = 2 ** 15;
+localparam UNSIGNED_SINGLE_TEST_NUM = 9;
+localparam UNSIGNED_RANDOM_TEST_NUM = 2 ** 25;
 localparam UNSIGNED_TEST_NUM = UNSIGNED_SINGLE_TEST_NUM + UNSIGNED_RANDOM_TEST_NUM;
 
 localparam TEST_NUM = SIGNED_TEST_NUM + UNSIGNED_TEST_NUM;
@@ -150,6 +150,14 @@ logic [16-1:0] dividend_abs_16;
 logic [16-1:0] divisor_16;
 logic [16-1:0] divisor_abs_16;
 
+logic [5:0] dividend_64_lzc;
+logic [4:0] dividend_32_lzc;
+logic [3:0] dividend_16_lzc;
+
+logic [5:0] divisor_64_lzc;
+logic [4:0] divisor_32_lzc;
+logic [3:0] divisor_16_lzc;
+
 logic neg_quotient_64;
 logic neg_remainder_64;
 logic neg_quotient_32;
@@ -202,8 +210,8 @@ initial begin
 	`APPL_WAIT_CYC(clk, 2)
 	acq_trig = 0;
 
-	`include "tb_stim_signed.svh"
 	`include "tb_stim_unsigned.svh"
+	`include "tb_stim_signed.svh"
 	
 
 	`WAIT_CYC(clk, 20)
@@ -289,6 +297,7 @@ initial begin
 		end
 
 		if(err_count == `MAX_ERR_COUNT) begin
+			$fdisplay(fptr, "finished_test_num = %d, error_test_num = %d", acq_count, err_count);
 			$display("Too many ERRORs, stop simulation!!!");
 			$fclose(fptr);
 			$stop();
@@ -297,10 +306,17 @@ initial begin
 		acq_count++;
 		`RESP_WAIT_SIG(clk, dut_finish_ready)
 		dut_finish_ready = 0;
+
+		if((acq_count != 0) & (acq_count % (2 ** 15) == 0))
+			$display("Simulation is still running !!!");
+
 	end while(acq_count < TEST_NUM);
 
 	`WAIT_SIG(clk, stim_end)
 	`WAIT_CYC(clk, 20)
+	$fdisplay(fptr, "\n");
+	$fdisplay(fptr, "------------------------------------------------------------------------------------");
+	$fdisplay(fptr, "finished_test_num = %d, error_test_num = %d", acq_count, err_count);
 	$display("response acquisition finishes!");
 	$display("TB finishes!");
 	$fclose(fptr);

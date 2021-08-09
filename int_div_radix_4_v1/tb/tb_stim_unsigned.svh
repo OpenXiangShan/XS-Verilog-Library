@@ -39,8 +39,16 @@
 
 opcode = OPCODE_UNSIGNED;
 
-dividend_64 = 64'h890f_e60b_30c6_e11d;
-divisor_64 = 64'h0013_cd5c_1b80_4af8;
+dividend_64 = 32'h079aad02;
+divisor_64 = 32'h0000067f;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
+dividend_64 = 32'h7162cb23;
+divisor_64 = 32'h0002c0fe;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
@@ -48,24 +56,24 @@ divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
 
-dividend_64 = 4245582384;
-divisor_64 = 3759407232;
+dividend_64 = 32'h024c5ac0;
+divisor_64 = 32'h0000059f;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-dividend_64 = 1993410489;
-divisor_64 = 7864320;
+dividend_64 = 32'h5f606974;
+divisor_64 = 32'h00000584;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-dividend_64 = 100;
-divisor_64 = 10;
+dividend_64 = 32'h0074d6b8;
+divisor_64 = 32'h00000585;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
@@ -82,14 +90,6 @@ divisor_16 = 60012;
 
 dividend_64 = 100;
 divisor_64 = 0;
-dividend_32 = dividend_64[32-1:0];
-divisor_32 = divisor_64[32-1:0];
-dividend_16 = dividend_64[16-1:0];
-divisor_16 = divisor_64[16-1:0];
-`SINGLE_STIM
-
-dividend_64 = 90909090;
-divisor_64 = 5050;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
@@ -113,11 +113,33 @@ divisor_16 = 0;
 `SINGLE_STIM
 
 for(i = 0; i < UNSIGNED_RANDOM_TEST_NUM; i++) begin
-	dividend_64 = {$urandom(), $urandom()};
-	divisor_64 = {$urandom(), $urandom()};
-	dividend_32 = dividend_64[32-1:0];
-	divisor_32 = divisor_64[32-1:0];
-	dividend_16 = dividend_64[16-1:0];
-	divisor_16 = divisor_64[16-1:0];
+	// Make sure divisor_lzc >= dividend_lzc, so "ITER" is always needed.
+	dividend_64_lzc = $urandom() % 64;
+	dividend_32_lzc = $urandom() % 32;
+	dividend_16_lzc = $urandom() % 16;
+	divisor_64_lzc = ($urandom() % (64 - dividend_64_lzc)) + dividend_64_lzc;
+	divisor_32_lzc = ($urandom() % (32 - dividend_32_lzc)) + dividend_32_lzc;
+	divisor_16_lzc = ($urandom() % (16 - dividend_16_lzc)) + dividend_16_lzc;
+
+	std::randomize(dividend_64);
+	dividend_64[63] = 1'b1;
+	dividend_64 = dividend_64 >> dividend_64_lzc;
+	std::randomize(divisor_64);
+	divisor_64[63] = 1'b1;
+	divisor_64 = divisor_64 >> divisor_64_lzc;
+
+	std::randomize(dividend_32);
+	dividend_32[31] = 1'b1;
+	dividend_32 = dividend_32 >> dividend_32_lzc;
+	std::randomize(divisor_32);
+	divisor_32[31] = 1'b1;
+	divisor_32 = divisor_32 >> divisor_32_lzc;
+
+	std::randomize(dividend_16);
+	dividend_16[15] = 1'b1;
+	dividend_16 = dividend_16 >> dividend_16_lzc;
+	std::randomize(divisor_16);
+	divisor_16[15] = 1'b1;
+	divisor_16 = divisor_16 >> divisor_16_lzc;
 	`SINGLE_STIM
 end
