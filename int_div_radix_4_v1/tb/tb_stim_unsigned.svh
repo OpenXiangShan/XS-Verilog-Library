@@ -39,6 +39,14 @@
 
 opcode = OPCODE_UNSIGNED;
 
+dividend_64 = 32'h79aacb27;
+divisor_64 = 32'h0000067f;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
 dividend_64 = 32'h079aad02;
 divisor_64 = 32'h0000067f;
 dividend_32 = dividend_64[32-1:0];
@@ -47,33 +55,72 @@ dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-dividend_64 = 32'h7162cb23;
-divisor_64 = 32'h0002c0fe;
+dividend_64 = 32'h1e6ab85b;
+divisor_64 = 32'h0000067f;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-
-dividend_64 = 32'h024c5ac0;
-divisor_64 = 32'h0000059f;
+dividend_64 = 32'h1e6ab018;
+divisor_64 = 32'h0000067f;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-dividend_64 = 32'h5f606974;
-divisor_64 = 32'h00000584;
+dividend_64 = 32'h3b92b337;
+divisor_64 = 32'h0000067f;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-dividend_64 = 32'h0074d6b8;
-divisor_64 = 32'h00000585;
+dividend_64 = 32'h3b92b221;
+divisor_64 = 32'h0000067f;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
+dividend_64 = 32'h1e6abdd6;
+divisor_64 = 32'h0000067f;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
+dividend_64 = 32'h2196b70b;
+divisor_64 = 32'h0000067f;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
+dividend_64 = 32'h558eb32d;
+divisor_64 = 32'h0000067f;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
+dividend_64 = 32'h79aae74b;
+divisor_64 = 32'h0000067f;
+dividend_32 = dividend_64[32-1:0];
+divisor_32 = divisor_64[32-1:0];
+dividend_16 = dividend_64[16-1:0];
+divisor_16 = divisor_64[16-1:0];
+`SINGLE_STIM
+
+dividend_64 = 32'h2196b70b;
+divisor_64 = 32'h0000067f;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
@@ -143,3 +190,13 @@ for(i = 0; i < UNSIGNED_RANDOM_TEST_NUM; i++) begin
 	divisor_16 = divisor_16 >> divisor_16_lzc;
 	`SINGLE_STIM
 end
+
+// for(i = 0; i < UNSIGNED_RANDOM_TEST_NUM; i++) begin
+// 	// For special cases.
+// 	divisor_32_lzc = 21;
+// 	dividend_32_lzc = $urandom() % (divisor_32_lzc + 1);
+// 	std::randomize(dividend_32);
+// 	divisor_32 = 32'h0000_067f;
+// 	dividend_32 = dividend_32 >> dividend_32_lzc;
+// 	`SINGLE_STIM
+// end

@@ -70,10 +70,10 @@ localparam OPCODE_SIGNED = 1'b1;
 localparam OPCODE_UNSIGNED = 1'b0;
 
 localparam SIGNED_SINGLE_TEST_NUM = 8;
-localparam SIGNED_RANDOM_TEST_NUM = 2 ** 25;
+localparam SIGNED_RANDOM_TEST_NUM = 2 ** 20;
 localparam SIGNED_TEST_NUM = SIGNED_SINGLE_TEST_NUM + SIGNED_RANDOM_TEST_NUM;
-localparam UNSIGNED_SINGLE_TEST_NUM = 9;
-localparam UNSIGNED_RANDOM_TEST_NUM = 2 ** 25;
+localparam UNSIGNED_SINGLE_TEST_NUM = 15;
+localparam UNSIGNED_RANDOM_TEST_NUM = 2 ** 20;
 localparam UNSIGNED_TEST_NUM = UNSIGNED_SINGLE_TEST_NUM + UNSIGNED_RANDOM_TEST_NUM;
 
 localparam TEST_NUM = SIGNED_TEST_NUM + UNSIGNED_TEST_NUM;
@@ -307,7 +307,7 @@ initial begin
 		`RESP_WAIT_SIG(clk, dut_finish_ready)
 		dut_finish_ready = 0;
 
-		if((acq_count != 0) & (acq_count % (2 ** 15) == 0))
+		if((acq_count != 0) & (acq_count % (2 ** 16) == 0))
 			$display("Simulation is still running !!!");
 
 	end while(acq_count < TEST_NUM);

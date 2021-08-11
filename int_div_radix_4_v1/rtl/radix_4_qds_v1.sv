@@ -138,7 +138,6 @@ assign para_m_neg_1_trunc_2_5 = {1'b0, qds_para_neg_1_i, 1'b0};
 assign para_m_neg_0_trunc_3_4 = {3'b0, qds_para_neg_0_i, special_divisor_i};
 
 // assign para_m_pos_1_trunc_3_4 = {4'b1111, ~qds_para_pos_1_i, qds_para_pos_1_i, 1'b0};
-// assign para_m_pos_1_trunc_3_4 = {4'b1111, ~qds_para_pos_1_i, qds_para_pos_1_i, special_divisor_i};
 assign para_m_pos_1_trunc_3_4 = {4'b1111, qds_para_pos_1_i, special_divisor_i};
 
 assign para_m_pos_2_trunc_2_5 = {1'b1, qds_para_pos_2_i, 1'b0};
@@ -152,7 +151,7 @@ assign divisor_mul_8 = {divisor[ITN_WIDTH-2:0], 3'b0};
 
 assign divisor_mul_neg_4 = ~{divisor, 2'b0};
 assign divisor_mul_neg_8 = ~{divisor[ITN_WIDTH-2:0], 1'b0, 2'b0};
-// TODO: Use a Full adder ???
+// Use a Full adder ???
 // assign divisor_mul_neg_4 = -{divisor, 2'b0};
 // assign divisor_mul_neg_8 = -{divisor[ITN_WIDTH-2:0], 1'b0, 2'b0};
 
@@ -167,20 +166,6 @@ assign divisor_mul_neg_8_trunc_2_5 = divisor_mul_neg_8[(ITN_WIDTH    ) -: 7];
 assign divisor_mul_neg_8_trunc_3_4 = divisor_mul_neg_8[(ITN_WIDTH + 1) -: 7];
 
 // sd = Sign Detector
-// assign divisor_for_sd_trunc_2_5 = 
-//   ({(7){prev_quot_digit_i[QUOT_NEG_2]}} & divisor_mul_8_trunc_2_5)
-// | ({(7){prev_quot_digit_i[QUOT_NEG_1]}} & divisor_mul_4_trunc_2_5)
-// | ({(7){prev_quot_digit_i[QUOT_ZERO ]}} & 7'b0)
-// | ({(7){prev_quot_digit_i[QUOT_POS_1]}} & divisor_mul_neg_4_trunc_2_5)
-// | ({(7){prev_quot_digit_i[QUOT_POS_2]}} & divisor_mul_neg_8_trunc_2_5);
-// assign divisor_for_sd_trunc_3_4 = 
-//   ({(7){prev_quot_digit_i[QUOT_NEG_2]}} & divisor_mul_8_trunc_3_4)
-// | ({(7){prev_quot_digit_i[QUOT_NEG_1]}} & divisor_mul_4_trunc_3_4)
-// | ({(7){prev_quot_digit_i[QUOT_ZERO ]}} & 7'b0)
-// | ({(7){prev_quot_digit_i[QUOT_POS_1]}} & divisor_mul_neg_4_trunc_3_4)
-// | ({(7){prev_quot_digit_i[QUOT_POS_2]}} & divisor_mul_neg_8_trunc_3_4);
-
-// Will this expression save some logics ?
 assign divisor_for_sd_trunc_2_5 = 
   ({(7){prev_quot_digit_i[QUOT_NEG_2]}} & divisor_mul_8_trunc_2_5)
 | ({(7){prev_quot_digit_i[QUOT_NEG_1]}} & divisor_mul_4_trunc_2_5)
@@ -201,8 +186,6 @@ u_sd_m_neg_1 (
 	.rem_carry_msb_i(rem_carry_mul_16_trunc_2_5),
 	.parameter_i(para_m_neg_1_trunc_2_5),
 	.divisor_i(divisor_for_sd_trunc_2_5),
-	// TODO: Is this needed ??
-	.cin_i(1'b0),
 	.sign_o(sd_m_neg_1_sign)
 );
 radix_4_sign_detector
@@ -211,8 +194,6 @@ u_sd_m_neg_0 (
 	.rem_carry_msb_i(rem_carry_mul_16_trunc_3_4),
 	.parameter_i(para_m_neg_0_trunc_3_4),
 	.divisor_i(divisor_for_sd_trunc_3_4),
-	// TODO: Is this needed ??
-	.cin_i(rem_sum_mul_16_trunc_2_5[0] & rem_carry_mul_16_trunc_2_5[0]),
 	.sign_o(sd_m_neg_0_sign)
 );
 radix_4_sign_detector
@@ -221,8 +202,6 @@ u_sd_m_pos_1 (
 	.rem_carry_msb_i(rem_carry_mul_16_trunc_3_4),
 	.parameter_i(para_m_pos_1_trunc_3_4),
 	.divisor_i(divisor_for_sd_trunc_3_4),
-	// TODO: Is this needed ??
-	.cin_i(rem_sum_mul_16_trunc_2_5[0] & rem_carry_mul_16_trunc_2_5[0]),
 	.sign_o(sd_m_pos_1_sign)
 );
 radix_4_sign_detector
@@ -231,8 +210,6 @@ u_sd_m_pos_2 (
 	.rem_carry_msb_i(rem_carry_mul_16_trunc_2_5),
 	.parameter_i(para_m_pos_2_trunc_2_5),
 	.divisor_i(divisor_for_sd_trunc_2_5),
-	// TODO: Is this needed ??
-	.cin_i(1'b0),
 	.sign_o(sd_m_pos_2_sign)
 );
 

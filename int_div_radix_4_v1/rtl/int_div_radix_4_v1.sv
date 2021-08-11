@@ -489,7 +489,8 @@ assign qds_para_pos_2_d =
 | ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b0_1010);
 
 assign special_divisor_en = fsm_q[FSM_PRE_1_BIT];
-assign special_divisor_d = (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000);
+// assign special_divisor_d = (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000);
+assign special_divisor_d = (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000) | (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100);
 always_ff @(posedge clk) begin
 	if(qds_para_neg_1_en)
 		qds_para_neg_1_q <= qds_para_neg_1_d;
@@ -667,12 +668,6 @@ radix_4_qds_v1 #(
 
 assign csa_3_2_x1 = {rem_sum_q  [0 +: (ITN_WIDTH - 2)], 2'b0};
 assign csa_3_2_x2 = {rem_carry_q[0 +: (ITN_WIDTH - 2)], 2'b0};
-// assign csa_3_2_x3 = 
-//   ({(ITN_WIDTH){prev_quot_digit_q[QUOT_NEG_2]}} & {divisor_abs_q[WIDTH-1:0], 4'b0})
-// | ({(ITN_WIDTH){prev_quot_digit_q[QUOT_NEG_1]}} & {1'b0, divisor_abs_q[WIDTH-1:0], 3'b0})
-// | ({(ITN_WIDTH){prev_quot_digit_q[QUOT_ZERO ]}} & {(ITN_WIDTH){1'b0}})
-// | ({(ITN_WIDTH){prev_quot_digit_q[QUOT_POS_1]}} & ~{1'b0, divisor_abs_q[WIDTH-1:0], 3'b0})
-// | ({(ITN_WIDTH){prev_quot_digit_q[QUOT_POS_2]}} & ~{divisor_abs_q[WIDTH-1:0], 4'b0});
 assign csa_3_2_x3 = 
   ({(ITN_WIDTH){prev_quot_digit_q[QUOT_NEG_2]}} & {divisor_abs_q[WIDTH-1:0], 4'b0})
 | ({(ITN_WIDTH){prev_quot_digit_q[QUOT_NEG_1]}} & {1'b0, divisor_abs_q[WIDTH-1:0], 3'b0})
