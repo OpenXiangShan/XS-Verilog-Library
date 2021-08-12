@@ -132,6 +132,7 @@ logic divisor_lzc_en;
 logic [(LZC_WIDTH + 1)-1:0] divisor_lzc_d;
 logic [(LZC_WIDTH + 1)-1:0] divisor_lzc_q;
 logic [(LZC_WIDTH + 1)-1:0] lzc_diff;
+logic r_shift_num;
 logic pre_r_shift_num;
 logic final_iter;
 logic iter_num_en;
@@ -188,16 +189,23 @@ logic [ITN_WIDTH-1:0] nrdnt_rem_plus_d_nxt;
 logic nrdnt_rem_is_zero;
 logic need_corr;
 
-logic [4-1:0] pre_m_pos_1;
-logic [4-1:0] pre_m_pos_2;
+logic [5-1:0] pre_m_pos_1;
+logic [5-1:0] pre_m_pos_2;
 logic [2-1:0] pre_cmp_res;
-logic [4-1:0] pre_rem_trunc_1_3;
-logic qds_para_0_en;
-logic [2-1:0] qds_para_0_d;
-logic [2-1:0] qds_para_0_q;
-logic qds_para_1_en;
-logic [4-1:0] qds_para_1_d;
-logic [4-1:0] qds_para_1_q;
+logic [5-1:0] pre_rem_trunc_1_4;
+
+logic qds_para_neg_1_en;
+logic [5-1:0] qds_para_neg_1_d;
+logic [5-1:0] qds_para_neg_1_q;
+logic qds_para_neg_0_en;
+logic [3-1:0] qds_para_neg_0_d;
+logic [3-1:0] qds_para_neg_0_q;
+logic qds_para_pos_1_en;
+logic [2-1:0] qds_para_pos_1_d;
+logic [2-1:0] qds_para_pos_1_q;
+logic qds_para_pos_2_en;
+logic [5-1:0] qds_para_pos_2_d;
+logic [5-1:0] qds_para_pos_2_q;
 logic special_divisor_en;
 logic special_divisor_d;
 logic special_divisor_q;
@@ -397,57 +405,101 @@ end
 // Choose the parameters for CMP, according to the value of the normalized_d[(WIDTH - 2) -: 3]
 // ================================================================================================================================================
 // These parameters are choosen as even numbers, so we can save several regs.
-assign qds_para_0_en = fsm_q[FSM_PRE_1_BIT];
+assign qds_para_neg_1_en = fsm_q[FSM_PRE_1_BIT];
 // For "normalized_d[(WIDTH - 2) -: 3]",
-// 000: m[+1] = +4 = 000_0100, -m[+1] = -4 = 111_1100;
-// 001: m[+1] = +4 = 000_0100, -m[+1] = -4 = 111_1100;
-// 010: m[+1] = +6 = 000_0110, -m[+1] = -6 = 111_1010;
-// 011: m[+1] = +6 = 000_0110, -m[+1] = -6 = 111_1010;
-// 100: m[+1] = +6 = 000_0110, -m[+1] = -6 = 111_1010;
-// 101: m[+1] = +8 = 000_1000, -m[+1] = -8 = 111_1000;
-// 110: m[+1] = +8 = 000_1000, -m[+1] = -8 = 111_1000;
-// 111: m[+1] = +8 = 000_1000, -m[+1] = -8 = 111_1000;
-// So we only need to use 2-bit reg.
-assign qds_para_0_d = 
+// 000: m[-1] = -13, -m[-1] = +13 = 00_1101 -> ext(-m[-1]) = 00_11010
+// 001: m[-1] = -15, -m[-1] = +15 = 00_1111 -> ext(-m[-1]) = 00_11110
+// 010: m[-1] = -16, -m[-1] = +16 = 01_0000 -> ext(-m[-1]) = 01_00000
+// 011: m[-1] = -17, -m[-1] = +17 = 01_0001 -> ext(-m[-1]) = 01_00010
+// 100: m[-1] = -19, -m[-1] = +19 = 01_0011 -> ext(-m[-1]) = 01_00110
+// 101: m[-1] = -20, -m[-1] = +20 = 01_0100 -> ext(-m[-1]) = 01_01000
+// 110: m[-1] = -22, -m[-1] = +22 = 01_0110 -> ext(-m[-1]) = 01_01100
+// 111: m[-1] = -24, -m[-1] = +24 = 01_1000 -> ext(-m[-1]) = 01_10000
+// We need to use 5-bit reg.
+assign qds_para_neg_1_d = 
+  ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 5'b0_1101)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 5'b0_1111)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 5'b1_0000)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 5'b1_0010)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 5'b1_0011)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 5'b1_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 5'b1_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b1_1000);
+
+
+assign qds_para_neg_0_en = fsm_q[FSM_PRE_1_BIT];
+// For "normalized_d[(WIDTH - 2) -: 3]",
+// 000: m[-0] = -4, -m[-0] = +4 = 000_0100
+// 001: m[-0] = -6, -m[-0] = +6 = 000_0110
+// 010: m[-0] = -6, -m[-0] = +6 = 000_0110
+// 011: m[-0] = -6, -m[-0] = +6 = 000_0110
+// 100: m[-0] = -6, -m[-0] = +6 = 000_0110
+// 101: m[-0] = -8, -m[-0] = +8 = 000_1000
+// 110: m[-0] = -8, -m[-0] = +8 = 000_1000
+// 111: m[-0] = -8, -m[-0] = +8 = 000_1000
+// We need to use 3-bit reg.
+assign qds_para_neg_0_d = 
+  ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 3'b010)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 3'b011)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 3'b011)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 3'b011)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 3'b011)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 3'b100)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 3'b100)
+| ({(3){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 3'b100);
+
+assign qds_para_pos_1_en = fsm_q[FSM_PRE_1_BIT];
+// For "normalized_d[(WIDTH - 2) -: 3]",
+// 000: m[+1] = +4, -m[+1] = -4 = 111_1100
+// 001: m[+1] = +4, -m[+1] = -4 = 111_1100
+// 010: m[+1] = +4, -m[+1] = -4 = 111_1100
+// 011: m[+1] = +4, -m[+1] = -4 = 111_1100
+// 100: m[+1] = +6, -m[+1] = -6 = 111_1010
+// 101: m[+1] = +6, -m[+1] = -6 = 111_1010
+// 110: m[+1] = +6, -m[+1] = -6 = 111_1010
+// 111: m[+1] = +8, -m[+1] = -8 = 111_1000
+assign qds_para_pos_1_d = 
   ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 2'b10)
 | ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 2'b10)
-| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 2'b01)
-| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 2'b01)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 2'b10)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 2'b10)
 | ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 2'b01)
-| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 2'b00)
-| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 2'b00)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 2'b01)
+| ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 2'b01)
 | ({(2){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 2'b00);
 
-
-assign qds_para_1_en = fsm_q[FSM_PRE_1_BIT];
+assign qds_para_pos_2_en = fsm_q[FSM_PRE_1_BIT];
 // For "normalized_d[(WIDTH - 2) -: 3]",
-// 000 is special, for other value, we always have "m[-1] = -m[+2]".
-// 000: m[+2] = +12 = 00_1100, -m[+2] = -12 = 11_0100. But, m[-1] = -13 = 11_0011, -m[-1] = +13 = 00_1101;
-// 001: m[+2] = +14 = 00_1110, -m[+2] = -14 = 11_0010;
-// 010: m[+2] = +16 = 01_0000, -m[+2] = -16 = 11_0000;
-// 011: m[+2] = +16 = 01_0000, -m[+2] = -16 = 11_0000;
-// 100: m[+2] = +18 = 01_0010, -m[+2] = -18 = 10_1110;
-// 101: m[+2] = +20 = 01_0100, -m[+2] = -20 = 10_1100;
-// 110: m[+2] = +22 = 01_0110, -m[+2] = -22 = 10_1010;
-// 111: m[+2] = +22 = 01_0110, -m[+2] = -22 = 10_1010;
-// So we only need to use 4-bit reg.
-assign qds_para_1_d = 
-  ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 4'b1_010)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 4'b1_001)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 4'b1_000)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 4'b1_000)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 4'b0_111)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 4'b0_110)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 4'b0_101)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 4'b0_101);
+// 000: m[+2] = +12, -m[+2] = -12 = 11_0100 -> ext(-m[+2]) = 11_01000
+// 001: m[+2] = +14, -m[+2] = -14 = 11_0010 -> ext(-m[+2]) = 11_00100
+// 010: m[+2] = +15, -m[+2] = -15 = 11_0001 -> ext(-m[+2]) = 11_00010
+// 011: m[+2] = +16, -m[+2] = -16 = 11_0000 -> ext(-m[+2]) = 11_00000
+// 100: m[+2] = +18, -m[+2] = -18 = 10_1110 -> ext(-m[+2]) = 10_11100
+// 101: m[+2] = +20, -m[+2] = -20 = 10_1100 -> ext(-m[+2]) = 10_11000
+// 110: m[+2] = +22, -m[+2] = -22 = 10_1010 -> ext(-m[+2]) = 10_10100
+// 111: m[+2] = +22, -m[+2] = -22 = 10_1010 -> ext(-m[+2]) = 10_10100
+assign qds_para_pos_2_d = 
+  ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 5'b1_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 5'b1_0010)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 5'b1_0001)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 5'b1_0000)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 5'b0_1110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 5'b0_1100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 5'b0_1010)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b0_1010);
 
 assign special_divisor_en = fsm_q[FSM_PRE_1_BIT];
-assign special_divisor_d = (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000);
+// assign special_divisor_d = (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000);
+assign special_divisor_d = (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000) | (divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100);
 always_ff @(posedge clk) begin
-	if(qds_para_0_en)
-		qds_para_0_q <= qds_para_0_d;
-	if(qds_para_1_en)
-		qds_para_1_q <= qds_para_1_d;
+	if(qds_para_neg_1_en)
+		qds_para_neg_1_q <= qds_para_neg_1_d;
+	if(qds_para_neg_0_en)
+		qds_para_neg_0_q <= qds_para_neg_0_d;
+	if(qds_para_pos_1_en)
+		qds_para_pos_1_q <= qds_para_pos_1_d;
+	if(qds_para_pos_2_en)
+		qds_para_pos_2_q <= qds_para_pos_2_d;
 	if(special_divisor_en)
 		special_divisor_q <= special_divisor_d;
 end
@@ -499,47 +551,47 @@ rem_sum_normal_init_value;
 assign rem_carry_init_value = {(ITN_WIDTH){1'b0}};
 
 // For "rem_sum_normal_init_value = normalized_dividend >> 2 >> r_shift_num", the decimal point is between "[ITN_WIDTH-1]" and "[ITN_WIDTH-2]".
-// According to the paper, we should use "(4 * rem_sum_normal_init_value)_trunc_1_3" to choose the 1st quot before the ITER.
-assign pre_rem_trunc_1_3 = {1'b0, rem_sum_init_value[(ITN_WIDTH - 4) -: 3]};
+// According to the paper, we should use "(4 * rem_sum_normal_init_value)_trunc_1_4" to choose the 1st quot before the ITER.
+assign pre_rem_trunc_1_4 = {1'b0, rem_sum_init_value[(ITN_WIDTH - 4) -: 4]};
 // For "normalized_d[(WIDTH - 2) -: 3]",
 // 000: m[+1] =  +4 = 0_0100;
 // 001: m[+1] =  +4 = 0_0100;
-// 010: m[+1] =  +6 = 0_0110;
-// 011: m[+1] =  +6 = 0_0110;
+// 010: m[+1] =  +4 = 0_0100;
+// 011: m[+1] =  +4 = 0_0100;
 // 100: m[+1] =  +6 = 0_0110;
-// 101: m[+1] =  +8 = 0_1000;
-// 110: m[+1] =  +8 = 0_1000;
+// 101: m[+1] =  +6 = 0_0110;
+// 110: m[+1] =  +6 = 0_0110;
 // 111: m[+1] =  +8 = 0_1000;
 // =============================
 // 000: m[+2] = +12 = 0_1100;
 // 001: m[+2] = +14 = 0_1110;
-// 010: m[+2] = +16 = 1_0000;
+// 010: m[+2] = +15 = 0_1111;
 // 011: m[+2] = +16 = 1_0000;
 // 100: m[+2] = +18 = 1_0010;
 // 101: m[+2] = +20 = 1_0100;
 // 110: m[+2] = +22 = 1_0110;
 // 111: m[+2] = +22 = 1_0110;
-// In conclusion, we only need to do 4-bit CMP operation in PRE_PROCESS_1, to get the 1st quot.
+// So we need to do 5-bit cmp to get the 1st quo.
 assign pre_m_pos_1 = 
-  ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 4'b0_010)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 4'b0_010)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 4'b0_011)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 4'b0_011)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 4'b0_011)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 4'b0_100)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 4'b0_100)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 4'b0_100);
+  ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 5'b0_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 5'b0_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 5'b0_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 5'b0_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 5'b0_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 5'b0_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 5'b0_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b0_1000);
 assign pre_m_pos_2 = 
-  ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 4'b0_110)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 4'b0_111)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 4'b1_000)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 4'b1_000)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 4'b1_001)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 4'b1_010)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 4'b1_011)
-| ({(4){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 4'b1_011);
-// The REM must be positive in PRE_PROCESS_1, so we only need to compare it with m[+1]/m[+2]. The 4-bit CMP should be very fast.
-assign pre_cmp_res = {(pre_rem_trunc_1_3 >= pre_m_pos_1), (pre_rem_trunc_1_3 >= pre_m_pos_2)};
+  ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 5'b0_1100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 5'b0_1110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 5'b0_1111)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 5'b1_0000)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 5'b1_0010)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 5'b1_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 5'b1_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b1_0110);
+// The REM must be positive in PRE_PROCESS_1, so we only need to compare it with m[+1]/m[+2]. The 5-bit CMP should be very fast.
+assign pre_cmp_res = {(pre_rem_trunc_1_4 >= pre_m_pos_1), (pre_rem_trunc_1_4 >= pre_m_pos_2)};
 assign prev_quot_digit_init_value = pre_cmp_res[0] ? QUOT_ONEHOT_POS_2 : pre_cmp_res[1] ? QUOT_ONEHOT_POS_1 : QUOT_ONEHOT_ZERO;
 assign prev_quot_digit_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
 assign prev_quot_digit_d = fsm_q[FSM_PRE_1_BIT] ? prev_quot_digit_init_value : quot_digit_iter_end;
@@ -605,8 +657,10 @@ radix_4_qds_v1 #(
 	.rem_sum_i(rem_sum_q),
 	.rem_carry_i(rem_carry_q),
 	.divisor_i(divisor_abs_q[WIDTH-1:0]),
-	.qds_para_0_i(qds_para_0_q),
-	.qds_para_1_i(qds_para_1_q),
+	.qds_para_neg_1_i(qds_para_neg_1_q),
+	.qds_para_neg_0_i(qds_para_neg_0_q),
+	.qds_para_pos_1_i(qds_para_pos_1_q),
+	.qds_para_pos_2_i(qds_para_pos_2_q),
 	.special_divisor_i(special_divisor_q),
 	.prev_quot_digit_i(prev_quot_digit_q),
 	.quot_digit_o(quot_digit_iter_end)
@@ -617,7 +671,6 @@ assign csa_3_2_x2 = {rem_carry_q[0 +: (ITN_WIDTH - 2)], 2'b0};
 assign csa_3_2_x3 = 
   ({(ITN_WIDTH){prev_quot_digit_q[QUOT_NEG_2]}} & {divisor_abs_q[WIDTH-1:0], 4'b0})
 | ({(ITN_WIDTH){prev_quot_digit_q[QUOT_NEG_1]}} & {1'b0, divisor_abs_q[WIDTH-1:0], 3'b0})
-| ({(ITN_WIDTH){prev_quot_digit_q[QUOT_ZERO ]}} & {(ITN_WIDTH){1'b0}})
 | ({(ITN_WIDTH){prev_quot_digit_q[QUOT_POS_1]}} & ~{1'b0, divisor_abs_q[WIDTH-1:0], 3'b0})
 | ({(ITN_WIDTH){prev_quot_digit_q[QUOT_POS_2]}} & ~{divisor_abs_q[WIDTH-1:0], 4'b0});
 compressor_3_2 #(

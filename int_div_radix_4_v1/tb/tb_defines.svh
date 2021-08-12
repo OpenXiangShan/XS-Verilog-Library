@@ -58,7 +58,7 @@
 `elsif USE_SHORT_DELAY
 `define VALID_READY_DELAY `SHORT_DELAY
 `else
-`define VALID_READY_DELAY 0
+`define VALID_READY_DELAY 1
 `endif
 
 
