@@ -37,7 +37,7 @@
 // Some common definitions for Testbench.
 // --------------------------------------------------------------------------------------------------------
 
-`timescale 1ns/100ps
+//`timescale 1ns/100ps
 
 `define CLK_HI 5
 `define CLK_LO 5

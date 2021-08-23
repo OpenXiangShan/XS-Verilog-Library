@@ -64,16 +64,16 @@ module tb_top #(
 // --------------------------------------------------------------------------------------------------------
 // (local) parameters begin
 
-localparam DUT_WIDTH = 32;
+localparam DUT_WIDTH = 64;
 
 localparam OPCODE_SIGNED = 1'b1;
 localparam OPCODE_UNSIGNED = 1'b0;
 
-localparam SIGNED_SINGLE_TEST_NUM = 8;
-localparam SIGNED_RANDOM_TEST_NUM = 2 ** 20;
+localparam SIGNED_SINGLE_TEST_NUM = 1;
+localparam SIGNED_RANDOM_TEST_NUM = 0;
 localparam SIGNED_TEST_NUM = SIGNED_SINGLE_TEST_NUM + SIGNED_RANDOM_TEST_NUM;
-localparam UNSIGNED_SINGLE_TEST_NUM = 15;
-localparam UNSIGNED_RANDOM_TEST_NUM = 2 ** 20;
+localparam UNSIGNED_SINGLE_TEST_NUM = 0;
+localparam UNSIGNED_RANDOM_TEST_NUM = 0;
 localparam UNSIGNED_TEST_NUM = UNSIGNED_SINGLE_TEST_NUM + UNSIGNED_RANDOM_TEST_NUM;
 
 localparam TEST_NUM = SIGNED_TEST_NUM + UNSIGNED_TEST_NUM;
@@ -192,6 +192,8 @@ logic dut_divisor_is_zero_16;
 // application process
 
 initial begin
+	$dumpfile("test.vcd");
+	$dumpvars();
 	dividend_64 = 0;
 	divisor_64 = 0;
 	dividend_32 = 0;

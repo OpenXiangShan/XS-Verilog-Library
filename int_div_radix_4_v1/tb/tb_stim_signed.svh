@@ -39,14 +39,14 @@
 
 opcode = OPCODE_SIGNED;
 
-dividend_64 = 64'hb338_d6e1_4a76_0a6d;
-divisor_64 = 64'hffd8_09e6_11a0_22a9;
+dividend_64 = 64'hb6afa88d8fe6163d;
+divisor_64 = 64'h2654731c80ca9fa;
 dividend_32 = dividend_64[32-1:0];
 divisor_32 = divisor_64[32-1:0];
 dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
-
+/*
 dividend_64 = 32'h8d201e54;
 divisor_64 = 32'hfff10513;
 dividend_32 = dividend_64[32-1:0];
@@ -102,7 +102,7 @@ divisor_32 = -1;
 dividend_16 = INT16_NEG_MIN;
 divisor_16 = -1;
 `SINGLE_STIM
-
+*/
 for(i = 0; i < SIGNED_RANDOM_TEST_NUM; i++) begin
 	// Make sure divisor_lzc >= dividend_lzc, so "ITER" is always needed.
 	dividend_64_lzc = $urandom() % 64;

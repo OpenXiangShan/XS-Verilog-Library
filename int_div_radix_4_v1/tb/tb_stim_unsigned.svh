@@ -38,7 +38,7 @@
 // --------------------------------------------------------------------------------------------------------
 
 opcode = OPCODE_UNSIGNED;
-
+/*
 dividend_64 = 32'h79aacb27;
 divisor_64 = 32'h0000067f;
 dividend_32 = dividend_64[32-1:0];
@@ -158,7 +158,7 @@ divisor_32 = 0;
 dividend_16 = 0;
 divisor_16 = 0;
 `SINGLE_STIM
-
+*/
 for(i = 0; i < UNSIGNED_RANDOM_TEST_NUM; i++) begin
 	// Make sure divisor_lzc >= dividend_lzc, so "ITER" is always needed.
 	dividend_64_lzc = $urandom() % 64;
