@@ -1,9 +1,17 @@
 // ========================================================================================================
+// File Name			: radix_4_qds_v1.sv
+// Author				: Yifei He
+// How to Contact		: hyf_sysu@qq.com
+// Created Time    		: 2021-07-20 09:44:49
+// Last Modified Time 	: 2021-10-06 18:11:49
+// ========================================================================================================
+// Description	:
+// Please Look at the reference for more details.
+// ========================================================================================================
+
+// ========================================================================================================
 // Copyright (C) 2021, Yifei He. All Rights Reserved.
 // This file is licensed under BSD 3-Clause License.
-// 
-// Author's E-mail: hyf_sysu@qq.com
-// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // Redistribution and use in source and binary forms, with or without modification, 
@@ -29,13 +37,6 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ========================================================================================================
-// File Name	: 	radix_4_qds_v1.sv
-// Author		: 	Yifei He
-// Created On	: 	2021/07/20
-// ================================================================================================================================================
-// Description	:
-// Please Look at the reference for more details.
-// ================================================================================================================================================
 
 // include some definitions here
 
@@ -52,7 +53,6 @@ module radix_4_qds_v1 #(
 	input  logic [WIDTH-1:0] divisor_i,
 	input  logic [5-1:0] qds_para_neg_1_i,
 	input  logic [3-1:0] qds_para_neg_0_i,
-	// input  logic [1-1:0] qds_para_pos_1_i,
 	input  logic [2-1:0] qds_para_pos_1_i,
 	input  logic [5-1:0] qds_para_pos_2_i,
 	input  logic special_divisor_i,
@@ -134,10 +134,8 @@ assign rem_carry_mul_16_trunc_3_4 = rem_carry_mul_16[(ITN_WIDTH + 1) -: 7];
 // ================================================================================================================================================
 assign para_m_neg_1_trunc_2_5 = {1'b0, qds_para_neg_1_i, 1'b0};
 
-// assign para_m_neg_0_trunc_3_4 = {3'b0, qds_para_neg_0_i, 1'b0};
 assign para_m_neg_0_trunc_3_4 = {3'b0, qds_para_neg_0_i, special_divisor_i};
 
-// assign para_m_pos_1_trunc_3_4 = {4'b1111, ~qds_para_pos_1_i, qds_para_pos_1_i, 1'b0};
 assign para_m_pos_1_trunc_3_4 = {4'b1111, qds_para_pos_1_i, special_divisor_i};
 
 assign para_m_pos_2_trunc_2_5 = {1'b1, qds_para_pos_2_i, 1'b0};
@@ -148,12 +146,9 @@ assign para_m_pos_2_trunc_2_5 = {1'b1, qds_para_pos_2_i, 1'b0};
 assign divisor = {1'b0, divisor_i, 3'b0};
 assign divisor_mul_4 = {divisor, 2'b0};
 assign divisor_mul_8 = {divisor[ITN_WIDTH-2:0], 3'b0};
-
+// Using "~" is enough here.
 assign divisor_mul_neg_4 = ~{divisor, 2'b0};
 assign divisor_mul_neg_8 = ~{divisor[ITN_WIDTH-2:0], 1'b0, 2'b0};
-// Use a Full adder ???
-// assign divisor_mul_neg_4 = -{divisor, 2'b0};
-// assign divisor_mul_neg_8 = -{divisor[ITN_WIDTH-2:0], 1'b0, 2'b0};
 
 // The decimal point is between "[ITN_WIDTH-1]" and "[ITN_WIDTH-2]".
 assign divisor_mul_4_trunc_2_5 = divisor_mul_4[(ITN_WIDTH    ) -: 7];

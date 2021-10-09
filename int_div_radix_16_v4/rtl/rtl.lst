@@ -1,0 +1,10 @@
++incdir+../rtl
+
+../rtl/compressor_3_2.sv
+../rtl/int_div_radix_16_v4.sv
+../rtl/r16_block.sv
+../rtl/radix_4_sign_coder.sv
+../rtl/radix_4_sign_detector.sv
+../rtl/lzc.sv
+
+

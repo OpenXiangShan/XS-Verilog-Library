@@ -1,16 +1,16 @@
 // ========================================================================================================
-// File Name			: radix_4_sign_detector.sv
-// Author				: Yifei He
+// File Name			: tb_defines.svh
+// Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
-// Created Time    		: 2021-07-20 16:08:45
-// Last Modified Time 	: 2021-09-10 14:32:35
+// Created Time    		: 2021-07-23 10:08:49
+// Last Modified Time   : 2021-09-20 10:17:55
 // ========================================================================================================
 // Description	:
-// Please Look at the reference for more details.
+// Some common definitions for Testbench.
 // ========================================================================================================
-
 // ========================================================================================================
-// Copyright (C) 2021, Yifei He. All Rights Reserved.
+// Copyright (C) 2021, HYF. All Rights Reserved.
+// ========================================================================================================
 // This file is licensed under BSD 3-Clause License.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
@@ -38,48 +38,78 @@
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // ========================================================================================================
 
-// include some definitions here
 
-module radix_4_sign_detector #(
-	// Put some parameters here, which can be changed by other modules.
-	
-)(
-	input  logic[7-1:0] rem_sum_msb_i,
-	input  logic[7-1:0] rem_carry_msb_i,
-	input  logic[7-1:0] parameter_i,
-	input  logic[7-1:0] divisor_i,
-	// input  cin_i,
-	output logic sign_o
-);
+`timescale 1ns/100ps
 
+`define CLK_HI 5
+`define CLK_LO 5
+`define CLK_PERIOD (`CLK_HI + `CLK_LO)
+// set stimuli application delay
+`define APPL_DELAY 3
+// set response aquisition delay
+`define RESP_DELAY 7
 
-// ================================================================================================================================================
-// (local) parameters begin
+`define SHORT_DELAY 3
+`define MIDDLE_DELAY 7
+`define LONG_DELAY 15
 
-
-
-// (local) parameters end
-// ================================================================================================================================================
-
-// ================================================================================================================================================
-// functions begin
-
+`ifdef USE_LONG_DELAY
+`define VALID_READY_DELAY `LONG_DELAY
+`elsif USE_MIDDLE_DELAY
+`define VALID_READY_DELAY `MIDDLE_DELAY
+`elsif USE_SHORT_DELAY
+`define VALID_READY_DELAY `SHORT_DELAY
+`else
+`define VALID_READY_DELAY 1
+`endif
 
 
-// functions end
-// ================================================================================================================================================
 
-// ================================================================================================================================================
-// signals begin
+`define WAIT_CYC(CLK, N)	\
+repeat(N) @(posedge CLK);
 
-logic [6-1:0] unused_bit;
+`define APPL_WAIT_CYC(CLK, N) \
+repeat(N) @(posedge CLK); \
+#(`APPL_DELAY);
 
-// signals end
-// ================================================================================================================================================
+`define RESP_WAIT_CYC(CLK, N) \
+repeat(N) @(posedge CLK); \
+#(`RESP_DELAY);
 
-// I wish the EDA could optimize these logics well....
-assign {sign_o, unused_bit} = rem_sum_msb_i + rem_carry_msb_i + parameter_i + divisor_i;
-// assign {sign_o, unused_bit} = rem_sum_msb_i + rem_carry_msb_i + parameter_i + divisor_i + {6'b0, cin_i};
+`define WAIT_SIG(CLK, SIG)	\
+do begin					\
+	@(posedge CLK);			\
+end while(SIG == 1'b0);
+
+`define WAIT_COMB_SIG(CLK, SIG)		\
+while(SIG == 1'b0) begin			\
+	@(posedge CLK);					\
+end
+
+`define APPL_WAIT_COMB_SIG(CLK, SIG) \
+#(`APPL_DELAY); \
+while(SIG == 1'b0) begin \
+	@(posedge CLK); \
+	#(`APPL_DELAY); \
+end
+
+`define APPL_WAIT_SIG(CLK, SIG) \
+do begin \
+	@(posedge CLK); \
+	#(`APPL_DELAY); \
+end while(SIG == 1'b0);
+
+`define RESP_WAIT_COMB_SIG(CLK, SIG) \
+#(`RESP_DELAY); \
+while(SIG == 1'b0) begin \
+	@(posedge CLK); \
+	#(`RESP_DELAY); \
+end
+
+`define RESP_WAIT_SIG(CLK, SIG) \
+do begin \
+	@(posedge CLK); \
+	#(`RESP_DELAY); \
+end while(SIG == 1'b0);
 
 
-endmodule

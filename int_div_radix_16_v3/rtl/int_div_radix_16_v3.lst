@@ -1,0 +1,8 @@
++incdir+../rtl
+
+../rtl/int_div_radix_16_v3.sv
+../rtl/lzc.sv
+../rtl/radix_2_csa.sv
+../rtl/radix_2_qds.sv
+
+#../rtl/int_div_radix_16_v3.sv
