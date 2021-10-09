@@ -33,7 +33,7 @@ add wave -position insertpoint -expand -group MAIN_SIGNALS -radix unsigned sim:/
 add wave -position insertpoint -expand -group MAIN_SIGNALS -radix unsigned sim:/tb_top/g_dut_16/dut/dividend_lzc_q
 add wave -position insertpoint -expand -group MAIN_SIGNALS -radix unsigned sim:/tb_top/g_dut_16/dut/divisor_lzc
 add wave -position insertpoint -expand -group MAIN_SIGNALS -radix unsigned sim:/tb_top/g_dut_16/dut/divisor_lzc_q
-add wave -position insertpoint -expand -group MAIN_SIGNALS -radix unsigned sim:/tb_top/g_dut_16/dut/lzc_diff
+add wave -position insertpoint -expand -group MAIN_SIGNALS -radix unsigned sim:/tb_top/g_dut_16/dut/lzc_diff_slow
 add wave -position insertpoint -expand -group MAIN_SIGNALS -radix unsigned sim:/tb_top/g_dut_16/dut/iter_num_q
 add wave -position insertpoint -expand -group MAIN_SIGNALS sim:/tb_top/g_dut_16/dut/no_iter_needed_q
 add wave -position insertpoint -expand -group MAIN_SIGNALS sim:/tb_top/g_dut_16/dut/final_iter

@@ -12,7 +12,7 @@ vmap work ./lib/work
 
 vlog -work work -incr -f ../tb/tb.lst
 
-vsim -c -l ./log/tb_top.log -wlf ./wave/tb_top.wlf -voptargs=+acc -sv_seed 20 work.tb_top
+vsim -c -l ./log/tb_top.log -wlf ./wave/tb_top.wlf -voptargs=+acc -sv_seed 21 work.tb_top
 
 
 # 0: full names

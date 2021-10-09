@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-09-21 21:04:30
-// Last Modified Time   : 2021-10-07 10:04:15
+// Last Modified Time   : 2021-10-09 10:36:16
 // ========================================================================================================
 // Description	:
 // A Radix-16 SRT Integer Divider, by using 2 overlapped Radix-4.
@@ -129,7 +129,10 @@ logic [(LZC_WIDTH + 1)-1:0] dividend_lzc_q;
 logic divisor_lzc_en;
 logic [(LZC_WIDTH + 1)-1:0] divisor_lzc_d;
 logic [(LZC_WIDTH + 1)-1:0] divisor_lzc_q;
-logic [(LZC_WIDTH + 1)-1:0] lzc_diff;
+// The delay of this signal is "delay(u_lzc) + delay(LZC_WIDTH-bit full adder)" -> slow
+logic [(LZC_WIDTH + 1)-1:0] lzc_diff_slow;
+// The delay of this signal is "delay(LZC_WIDTH-bit full adder)" -> fast
+logic [(LZC_WIDTH + 1)-1:0] lzc_diff_fast;
 logic [2-1:0] r_shift_num;
 logic iter_num_en;
 logic [(LZC_WIDTH - 2)-1:0] iter_num_d;
@@ -495,12 +498,12 @@ end
 // ================================================================================================================================================
 // Get iter_num, and some initial value for different regs.
 // ================================================================================================================================================
-assign lzc_diff[0 +: (LZC_WIDTH + 1)] = fsm_q[FSM_PRE_0_BIT] ? {1'b0, divisor_lzc[0 +: LZC_WIDTH]} - {1'b0, dividend_lzc[0 +: LZC_WIDTH]} : 
-{1'b0, divisor_lzc_q[0 +: LZC_WIDTH]} - {1'b0, dividend_lzc_q[0 +: LZC_WIDTH]};
+assign lzc_diff_slow = {1'b0, divisor_lzc[0 +: LZC_WIDTH]} - {1'b0, dividend_lzc[0 +: LZC_WIDTH]};
+assign lzc_diff_fast = {1'b0, divisor_lzc_q[0 +: LZC_WIDTH]} - {1'b0, dividend_lzc_q[0 +: LZC_WIDTH]};
 
 // Make sure "dividend_too_small" is the "Q" of a Reg -> The timing could be improved.
 assign dividend_too_small_en = fsm_q[FSM_PRE_0_BIT];
-assign dividend_too_small_d = lzc_diff[LZC_WIDTH] | dividend_lzc[LZC_WIDTH];
+assign dividend_too_small_d = lzc_diff_slow[LZC_WIDTH] | dividend_lzc[LZC_WIDTH];
 always_ff @(posedge clk)
 	if(dividend_too_small_en)
 		dividend_too_small_q <= dividend_too_small_d;
@@ -530,7 +533,7 @@ always_ff @(posedge clk)
 		no_iter_needed_q <= no_iter_needed_d;
 
 // TO save a FA, use "lzc_diff[1:0]" to express "r_shift_num";
-assign r_shift_num = lzc_diff[1:0];
+assign r_shift_num = lzc_diff_fast[1:0];
 assign rem_sum_normal_init_value = {
 	3'b0, 
 	  {(WIDTH + 3){r_shift_num == 2'd0}} & {2'b0, 	dividend_abs_q[WIDTH-1:0], 1'b0	}
@@ -616,7 +619,7 @@ end
 
 assign final_iter = (iter_num_q == {(LZC_WIDTH - 2){1'b0}});
 assign iter_num_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
-assign iter_num_d = fsm_q[FSM_PRE_1_BIT] ? (lzc_diff[LZC_WIDTH - 1:2] + {{(LZC_WIDTH - 3){1'b0}}, &lzc_diff[1:0]}) : 
+assign iter_num_d = fsm_q[FSM_PRE_1_BIT] ? (lzc_diff_fast[LZC_WIDTH - 1:2] + {{(LZC_WIDTH - 3){1'b0}}, &lzc_diff_fast[1:0]}) : 
 (iter_num_q - {{(LZC_WIDTH - 3){1'b0}}, 1'b1});
 always_ff @(posedge clk)
 	if(iter_num_en)
