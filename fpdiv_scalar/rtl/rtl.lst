@@ -1,0 +1,6 @@
++incdir+../rtl
+
+../rtl/fpdiv_scalar.sv
+../rtl/lzc.sv
+../rtl/radix_2_csa.sv
+../rtl/radix_2_qds.sv

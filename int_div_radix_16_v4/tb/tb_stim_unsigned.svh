@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-07-23 10:08:49
-// Last Modified Time   : 2021-09-20 15:18:43
+// Last Modified Time   : 2021-12-03 20:46:42
 // ========================================================================================================
 // Description	:
 // Stim for unsigned op.
@@ -121,14 +121,6 @@ dividend_16 = dividend_64[16-1:0];
 divisor_16 = divisor_64[16-1:0];
 `SINGLE_STIM
 
-dividend_64 = 32'h2196b70b;
-divisor_64 = 32'h0000067f;
-dividend_32 = dividend_64[32-1:0];
-divisor_32 = divisor_64[32-1:0];
-dividend_16 = dividend_64[16-1:0];
-divisor_16 = divisor_64[16-1:0];
-`SINGLE_STIM
-
 dividend_64 = UINT64_POS_MAX;
 divisor_64 = 10;
 dividend_32 = UINT32_POS_MAX;
@@ -161,7 +153,7 @@ dividend_16 = 0;
 divisor_16 = 0;
 `SINGLE_STIM
 
-for(i = 0; i < UNSIGNED_RANDOM_TEST_NUM; i++) begin
+for(i = 0; i < UDIV_RANDOM_NUM; i++) begin
 	// Make sure divisor_lzc >= dividend_lzc, so "ITER" is always needed.
 	dividend_64_lzc = $urandom() % 64;
 	dividend_32_lzc = $urandom() % 32;

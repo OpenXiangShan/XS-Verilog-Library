@@ -41,6 +41,9 @@ add wave -position insertpoint -expand -group main_signals sim:/tb_top/g_dut_64/
 add wave -position insertpoint -expand -group main_signals sim:/tb_top/g_dut_64/dut/rem_sum_init_value
 add wave -position insertpoint -expand -group main_signals sim:/tb_top/g_dut_64/dut/rem_sum_q
 add wave -position insertpoint -expand -group main_signals sim:/tb_top/g_dut_64/dut/rem_carry_q
+add wave -position insertpoint -expand -group main_signals sim:/tb_top/g_dut_64/dut/nr_rem
+add wave -position insertpoint -expand -group main_signals sim:/tb_top/g_dut_64/dut/nr_rem_plus_d
+add wave -position insertpoint -expand -group main_signals sim:/tb_top/g_dut_64/dut/need_corr
 
 
 add wave -position insertpoint -expand -group quo_path -radix binary sim:/tb_top/g_dut_64/dut/prev_prev_quo_q

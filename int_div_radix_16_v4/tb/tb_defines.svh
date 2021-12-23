@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-07-23 10:08:49
-// Last Modified Time   : 2021-09-20 10:17:55
+// Last Modified Time   : 2021-12-03 19:45:13
 // ========================================================================================================
 // Description	:
 // Some common definitions for Testbench.
@@ -68,48 +68,60 @@
 `define WAIT_CYC(CLK, N)	\
 repeat(N) @(posedge CLK);
 
-`define APPL_WAIT_CYC(CLK, N) \
-repeat(N) @(posedge CLK); \
+`define APPL_WAIT_CYC(CLK, N) 	\
+repeat(N) @(posedge CLK); 		\
 #(`APPL_DELAY);
 
-`define RESP_WAIT_CYC(CLK, N) \
-repeat(N) @(posedge CLK); \
+`define RESP_WAIT_CYC(CLK, N) 	\
+repeat(N) @(posedge CLK); 		\
 #(`RESP_DELAY);
 
-`define WAIT_SIG(CLK, SIG)	\
-do begin					\
-	@(posedge CLK);			\
+`define WAIT_SIG(CLK, SIG, STOP_WAIT)	\
+do begin								\
+	if(STOP_WAIT)						\
+		break;							\
+	@(posedge CLK);						\
 end while(SIG == 1'b0);
 
-`define WAIT_COMB_SIG(CLK, SIG)		\
-while(SIG == 1'b0) begin			\
-	@(posedge CLK);					\
+`define WAIT_COMB_SIG(CLK, SIG, STOP_WAIT)		\
+while(SIG == 1'b0) begin						\
+	if(STOP_WAIT)								\
+			break;								\
+	@(posedge CLK);								\
 end
 
-`define APPL_WAIT_COMB_SIG(CLK, SIG) \
-#(`APPL_DELAY); \
-while(SIG == 1'b0) begin \
-	@(posedge CLK); \
-	#(`APPL_DELAY); \
+`define APPL_WAIT_COMB_SIG(CLK, SIG, STOP_WAIT) \
+#(`APPL_DELAY); 								\
+while(SIG == 1'b0) begin 						\
+	if(STOP_WAIT)								\
+			break;								\
+	@(posedge CLK); 							\
+	#(`APPL_DELAY); 							\
 end
 
-`define APPL_WAIT_SIG(CLK, SIG) \
-do begin \
-	@(posedge CLK); \
-	#(`APPL_DELAY); \
+`define APPL_WAIT_SIG(CLK, SIG, STOP_WAIT)			\
+do begin 											\
+	if(STOP_WAIT)									\
+		break;										\
+	@(posedge CLK); 								\
+	#(`APPL_DELAY); 								\
 end while(SIG == 1'b0);
 
-`define RESP_WAIT_COMB_SIG(CLK, SIG) \
-#(`RESP_DELAY); \
-while(SIG == 1'b0) begin \
-	@(posedge CLK); \
-	#(`RESP_DELAY); \
+`define RESP_WAIT_COMB_SIG(CLK, SIG, STOP_WAIT) 	\
+#(`RESP_DELAY); 									\
+while(SIG == 1'b0) begin 							\
+	if(STOP_WAIT)									\
+		break;										\
+	@(posedge CLK); 								\
+	#(`RESP_DELAY); 								\
 end
 
-`define RESP_WAIT_SIG(CLK, SIG) \
-do begin \
-	@(posedge CLK); \
-	#(`RESP_DELAY); \
+`define RESP_WAIT_SIG(CLK, SIG, STOP_WAIT) 		\
+do begin 										\
+	if(STOP_WAIT)								\
+		break;									\
+	@(posedge CLK); 							\
+	#(`RESP_DELAY); 							\
 end while(SIG == 1'b0);
 
 

@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-07-23 10:08:49
-// Last Modified Time   : 2021-09-21 08:21:37
+// Last Modified Time   : 2021-12-05 11:41:23
 // ========================================================================================================
 // Description	:
 // A Radix-16 SRT Integer Divider, by using 4 overlapped Radix-2.
@@ -142,7 +142,6 @@ logic dividend_too_small;
 logic dividend_too_small_en;
 logic dividend_too_small_d;
 logic dividend_too_small_q;
-
 logic divisor_is_zero;
 logic quo_sign_en;
 logic quo_sign_d;
@@ -458,6 +457,12 @@ assign quo_dig[0] = prev_prev_quo_q[0] ? prev_quo_minus_d_q : prev_prev_quo_q[1]
 
 generate
 for(i = 0; i < 4; i = i + 1) begin: g_srt_control_path
+	// The complete "divisor" used for srt_iter is {2'b00, divisor_abs_q[WIDTH-1:0]}
+	// Since divisor_abs_q is normalized, so divisor_abs_q[WIDTH-1] = 1'b1.
+	// That means the value of divisor_complete[MSB -: 3] is already-known -> In "radix_2_csa" we just use this already-known information to do CSA calculation
+	// Several MSBs of rem_sum_zero[i] is used to form rem_sum_dp[1]
+	// Here, actually we are doing "2 * (2 * rem - q * d)"
+	// So rem_sum_cp[i][10] doesn't need to be the input signal of "radix_2_csa"
 	radix_2_csa #(
 		// 11, 9, 7, 5
 		.WIDTH(11 - (2 * i))
@@ -481,7 +486,7 @@ for(i = 0; i < 4; i = i + 1) begin: g_srt_control_path
 	assign rem_carry_minus_d	[i][(2 * i):0] = {((2 * i) + 1){1'b0}};
 	assign rem_sum_plus_d		[i][(2 * i):0] = {((2 * i) + 1){1'b0}};
 	assign rem_carry_plus_d		[i][(2 * i):0] = {((2 * i) + 1){1'b0}};
-
+	// Hewe we are using "2 * rem_sum" and "2 * rem_carry" to select the next quo
 	radix_2_qds u_qds_quo_zero (
 		.rem_sum_msb_i(rem_sum_zero[i][10:8]),
 		.rem_carry_msb_i(rem_carry_zero[i][10:8]),
@@ -506,6 +511,7 @@ assign quo_dig[1] = quo_dig[0][0] ? quo_dig_minus_d[0] : quo_dig[0][1] ? quo_dig
 assign quo_dig[2] = quo_dig[1][0] ? quo_dig_minus_d[1] : quo_dig[1][1] ? quo_dig_plus_d[1] : quo_dig_zero[1];
 assign quo_dig[3] = quo_dig[2][0] ? quo_dig_minus_d[2] : quo_dig[2][1] ? quo_dig_plus_d[2] : quo_dig_zero[2];
 
+// rem_sum_dp[0, 1, 2, 3, 4] has already multiplied by 2
 assign rem_sum_dp[0] = rem_sum_q;
 assign rem_carry_dp[0] = rem_carry_q;
 assign divisor_ext = {2'b0, divisor_abs_q[WIDTH-1:0], 3'b0};

@@ -12,7 +12,7 @@ vmap work ./lib/work
 
 vlog -work work -incr -f ../tb/tb.lst
 
-vsim -c -l ./log/tb_top.log -wlf ./wave/tb_top.wlf -voptargs=+acc -sv_seed 7 work.tb_top
+vsim -c -l ./log/tb_top.log -wlf ./wave/tb_top.wlf -voptargs=+acc -sv_seed 29 work.tb_top
 
 
 # 0: full names
@@ -24,7 +24,7 @@ configure wave -timelineunits ns
 # do wave_64.do
 
 # wave files for WIDTH = 32
-#do wave_32.do
+do wave_32.do
 
 # wave files for WIDTH = 16
 #do wave_16.do
