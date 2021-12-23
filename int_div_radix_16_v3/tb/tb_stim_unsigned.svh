@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-07-23 10:08:49
-// Last Modified Time   : 2021-09-20 15:18:43
+// Last Modified Time   : 2021-12-03 19:46:31
 // ========================================================================================================
 // Description	:
 // Stim for unsigned op.
@@ -161,7 +161,7 @@ dividend_16 = 0;
 divisor_16 = 0;
 `SINGLE_STIM
 
-for(i = 0; i < UNSIGNED_RANDOM_TEST_NUM; i++) begin
+for(i = 0; i < UDIV_RANDOM_NUM; i++) begin
 	// Make sure divisor_lzc >= dividend_lzc, so "ITER" is always needed.
 	dividend_64_lzc = $urandom() % 64;
 	dividend_32_lzc = $urandom() % 32;

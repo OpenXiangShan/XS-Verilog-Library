@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-09-21 21:04:30
-// Last Modified Time   : 2021-10-09 10:36:16
+// Last Modified Time   : 2021-12-03 20:54:20
 // ========================================================================================================
 // Description	:
 // A Radix-16 SRT Integer Divider, by using 2 overlapped Radix-4.
@@ -339,11 +339,11 @@ assign rem_sign_d = dividend_sign;
 assign dividend_abs_d = 
   ({(WIDTH + 1){fsm_q[FSM_IDLE_ABS_BIT]}} 	& {1'b0, dividend_abs})
 | ({(WIDTH + 1){fsm_q[FSM_PRE_0_BIT]}} 		& {1'b0, normalized_dividend})
-| ({(WIDTH + 1){fsm_q[FSM_POST_0_BIT]}} 	& nr_rem_nxt[3 +: (WIDTH + 1)]);
+| ({(WIDTH + 1){fsm_q[FSM_POST_0_BIT]}} 	& nr_rem_nxt[5 +: (WIDTH + 1)]);
 assign divisor_abs_d = 
   ({(WIDTH + 1){fsm_q[FSM_IDLE_ABS_BIT]}} 	& {1'b0, divisor_abs})
 | ({(WIDTH + 1){fsm_q[FSM_PRE_0_BIT]}} 		& {1'b0, normalized_divisor})
-| ({(WIDTH + 1){fsm_q[FSM_POST_0_BIT]}} 	& nr_rem_plus_d_nxt[3 +: (WIDTH + 1)]);
+| ({(WIDTH + 1){fsm_q[FSM_POST_0_BIT]}} 	& nr_rem_plus_d_nxt[5 +: (WIDTH + 1)]);
 
 always_ff @(posedge clk) begin
 	if(dividend_abs_en)
@@ -543,7 +543,7 @@ assign rem_sum_normal_init_value = {
 };
 assign rem_carry_init_value = {(ITN_W){1'b0}};
 // divisor_is_zero/dividend_too_small: Put the dividend at the suitable position. So we can get the correct R in POST_PROCESS_1.
-assign rem_sum_init_value = (dividend_too_small_q | divisor_is_zero) ? {3'b0, post_r_shift_res_s5, 3'b0} : no_iter_needed_q ? {(ITN_W){1'b0}} : 
+assign rem_sum_init_value = (dividend_too_small_q | divisor_is_zero) ? {1'b0, post_r_shift_res_s5, 5'b0} : no_iter_needed_q ? {(ITN_W){1'b0}} : 
 rem_sum_normal_init_value;
 
 // For "rem_sum_normal_init_value = (normalized_dividend >> 2 >> r_shift_num)", the decimal point is between "[ITN_W-1]" and "[ITN_W-2]".
@@ -568,6 +568,24 @@ assign pre_rem_trunc_1_4 = {1'b0, rem_sum_normal_init_value[(ITN_W - 4) -: 4]};
 // 110: m[+2] = +22 = 1_0110;
 // 111: m[+2] = +22 = 1_0110;
 // So we need to do 5-bit cmp to get the 1st quo.
+assign pre_m_pos_1 = 
+  ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 5'b0_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 5'b0_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 5'b0_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 5'b0_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 5'b0_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 5'b0_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 5'b0_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b0_1000);
+assign pre_m_pos_2 = 
+  ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b000}} & 5'b0_1100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b001}} & 5'b0_1110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b010}} & 5'b0_1111)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b011}} & 5'b1_0000)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b100}} & 5'b1_0010)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b101}} & 5'b1_0100)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b110}} & 5'b1_0110)
+| ({(5){divisor_abs_q[(WIDTH - 2) -: 3] == 3'b111}} & 5'b1_0110);
 // REM must be positive in PRE_PROCESS_1, so we only need to compare it with m[+1]/m[+2]. The 5-bit CMP should be fast enough.
 assign pre_cmp_res = {(pre_rem_trunc_1_4 >= pre_m_pos_1), (pre_rem_trunc_1_4 >= pre_m_pos_2)};
 assign prev_quo_digit_init_value = pre_cmp_res[0] ? QUO_ONEHOT_POS_2 : pre_cmp_res[1] ? QUO_ONEHOT_POS_1 : QUO_ONEHOT_ZERO;

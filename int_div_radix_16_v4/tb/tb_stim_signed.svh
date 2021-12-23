@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-07-23 10:08:49
-// Last Modified Time   : 2021-09-20 15:18:24
+// Last Modified Time   : 2021-12-03 19:55:01
 // ========================================================================================================
 // Description	:
 // Stim for signed op.
@@ -105,7 +105,7 @@ dividend_16 = INT16_NEG_MIN;
 divisor_16 = -1;
 `SINGLE_STIM
 
-for(i = 0; i < SIGNED_RANDOM_TEST_NUM; i++) begin
+for(i = 0; i < SDIV_RANDOM_NUM; i++) begin
 	// Make sure divisor_lzc >= dividend_lzc, so "ITER" is always needed.
 	dividend_64_lzc = $urandom() % 64;
 	dividend_32_lzc = $urandom() % 32;

@@ -1,7 +1,7 @@
 +incdir+../tb
 
 # RTL
--f ../rtl/int_div_radix_16_v3.lst
+-f ../rtl/rtl.lst
 
 
 # TB file

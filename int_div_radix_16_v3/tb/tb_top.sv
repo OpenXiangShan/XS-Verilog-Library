@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-07-23 10:08:49
-// Last Modified Time   : 2021-09-21 08:05:50
+// Last Modified Time   : 2021-12-03 19:55:50
 // ========================================================================================================
 // Description	:
 // TB for R16_SRT formed by 4 overlapped R2_SRT.
@@ -39,26 +39,30 @@
 // ========================================================================================================
 
 // include some definitions here
-`define MAX_ERR_COUNT 10
-`define USE_SHORT_DELAY
+`define MAX_ERR_COUNT 5
+
+`define USE_ZERO_DELAY
+// `define USE_SHORT_DELAY
+// `define USE_MIDDLE_DELAY
+// `define USE_LONG_DELAY
+
 `include "tb_defines.svh"
-// If DUT doesn't have valid-ready control logic itself, don't use this definition.
+// If DUT doesn't have valid-ready control logic itself, don't define this..
 `define DUT_HAS_VALID_READY
 
 `define SINGLE_STIM \
 dut_start_valid = 1; \
-`WAIT_COMB_SIG(clk, (dut_start_valid & dut_start_ready)) \
+`WAIT_COMB_SIG(clk, (dut_start_valid & dut_start_ready), 0) \
 `APPL_WAIT_CYC(clk, 1) \
 dut_start_valid = 0; \
  \
-`WAIT_SIG(clk, (dut_finish_valid & dut_finish_ready)) \
+`WAIT_SIG(clk, (dut_finish_valid & dut_finish_ready), 0) \
 dut_start_valid_after_finish_handshake_delay = $urandom() % `VALID_READY_DELAY; \
 `APPL_WAIT_CYC(clk, dut_start_valid_after_finish_handshake_delay)
 
 
 module tb_top #(
 	// Put some parameters here, which can be changed by other modules
-	
 )(
 );
 
@@ -71,29 +75,23 @@ localparam DUT_WIDTH = 32;
 localparam OPCODE_SIGNED = 1'b1;
 localparam OPCODE_UNSIGNED = 1'b0;
 
-localparam SIGNED_SINGLE_TEST_NUM = 8;
-localparam SIGNED_RANDOM_TEST_NUM = 2 ** 20;
-localparam SIGNED_TEST_NUM = SIGNED_SINGLE_TEST_NUM + SIGNED_RANDOM_TEST_NUM;
-localparam UNSIGNED_SINGLE_TEST_NUM = 15;
-localparam UNSIGNED_RANDOM_TEST_NUM = 2 ** 20;
-localparam UNSIGNED_TEST_NUM = UNSIGNED_SINGLE_TEST_NUM + UNSIGNED_RANDOM_TEST_NUM;
-
-localparam TEST_NUM = SIGNED_TEST_NUM + UNSIGNED_TEST_NUM;
+localparam SDIV_RANDOM_NUM = 2 ** 9;
+localparam UDIV_RANDOM_NUM = 2 ** 9;
 
 localparam UINT64_POS_MAX = {(64){1'b1}};
-localparam INT64_POS_MAX = {1'b0, {(63){1'b1}}};
-localparam INT64_NEG_MIN = {1'b1, {(63){1'b0}}};
-localparam INT64_NEG_ONE = {(64){1'b1}};
+localparam INT64_POS_MAX  = {1'b0, {(63){1'b1}}};
+localparam INT64_NEG_MIN  = {1'b1, {(63){1'b0}}};
+localparam INT64_NEG_ONE  = {(64){1'b1}};
 
 localparam UINT32_POS_MAX = {(32){1'b1}};
-localparam INT32_POS_MAX = {1'b0, {(31){1'b1}}};
-localparam INT32_NEG_MIN = {1'b1, {(31){1'b0}}};
-localparam INT32_NEG_ONE = {(32){1'b1}};
+localparam INT32_POS_MAX  = {1'b0, {(31){1'b1}}};
+localparam INT32_NEG_MIN  = {1'b1, {(31){1'b0}}};
+localparam INT32_NEG_ONE  = {(32){1'b1}};
 
 localparam UINT16_POS_MAX = {(16){1'b1}};
-localparam INT16_POS_MAX = {1'b0, {(15){1'b1}}};
-localparam INT16_NEG_MIN = {1'b1, {(15){1'b0}}};
-localparam INT16_NEG_ONE = {(16){1'b1}};
+localparam INT16_POS_MAX  = {1'b0, {(15){1'b1}}};
+localparam INT16_NEG_MIN  = {1'b1, {(15){1'b0}}};
+localparam INT16_NEG_ONE  = {(16){1'b1}};
 
 // ==================================================================================================================================================
 // functions
@@ -203,7 +201,7 @@ initial begin
 	acq_trig = 0;
 	stim_end = 0;
 
-	`APPL_WAIT_SIG(clk, simulation_start)
+	`APPL_WAIT_SIG(clk, simulation_start, 0)
 	$display("TB: stimuli application starts!");
 
 	acq_trig = 1;
@@ -213,8 +211,7 @@ initial begin
 	`include "tb_stim_unsigned.svh"
 	`include "tb_stim_signed.svh"
 	
-
-	`WAIT_CYC(clk, 20)
+	// `WAIT_CYC(clk, 5)
 	stim_end = 1;
 end
 
@@ -244,11 +241,14 @@ initial begin
 	err_count = 0;
 
 	do begin
-		`WAIT_COMB_SIG(clk, dut_start_valid)
-		`WAIT_COMB_SIG(clk, dut_finish_valid)
+		`WAIT_COMB_SIG(clk, dut_start_valid, stim_end)
+		`WAIT_COMB_SIG(clk, dut_finish_valid, stim_end)
 		dut_finish_ready_after_finish_valid_delay = $urandom() % `VALID_READY_DELAY;
 		`RESP_WAIT_CYC(clk, dut_finish_ready_after_finish_valid_delay)
 		dut_finish_ready = 1;
+
+		if(stim_end)
+			break;
 
 		if((compare_ok == 0) | (compare_ok == 1'bX)) begin
 			$display("ERROR FOUND:");
@@ -288,16 +288,15 @@ initial begin
 		end
 
 		acq_count++;
-		`RESP_WAIT_SIG(clk, dut_finish_ready)
+		`RESP_WAIT_SIG(clk, dut_finish_ready, stim_end)
 		dut_finish_ready = 0;
 
 		if((acq_count != 0) & (acq_count % (2 ** 16) == 0))
 			$display("Simulation is still running !!!");
 
-	end while(acq_count < TEST_NUM);
+	end while(stim_end == 0);
 
-	`WAIT_SIG(clk, stim_end)
-	`WAIT_CYC(clk, 20)
+	`WAIT_CYC(clk, 5)
 	$fdisplay(fptr, "\n");
 	$fdisplay(fptr, "------------------------------------------------------------------------------------");
 	$fdisplay(fptr, "finished_test_num = %d, error_test_num = %d", acq_count, err_count);
@@ -467,23 +466,22 @@ endgenerate
 initial begin
 	do begin
 		dut_start_ready = 0;
-		`RESP_WAIT_COMB_SIG(clk, dut_start_valid)
+		`RESP_WAIT_COMB_SIG(clk, dut_start_valid, 0)
 		dut_start_ready_after_start_valid_delay = $urandom() % `VALID_READY_DELAY;
 		`RESP_WAIT_CYC(clk, dut_start_ready_after_start_valid_delay)
 		dut_start_ready = 1;
-		`RESP_WAIT_SIG(clk, dut_start_ready)
+		`RESP_WAIT_SIG(clk, dut_start_ready, 0)
 	end while(1);
-	// end while(acq_count < TEST_NUM);
 end
 
 initial begin
 	do begin
 		dut_finish_valid = 0;
-		`WAIT_COMB_SIG(clk, (dut_start_valid & dut_start_ready))
+		`WAIT_COMB_SIG(clk, (dut_start_valid & dut_start_ready), 0)
 		dut_finish_valid_after_start_handshake_delay = $urandom() % `VALID_READY_DELAY;
 		`APPL_WAIT_CYC(clk, dut_finish_valid_after_start_handshake_delay)
 		dut_finish_valid = 1;
-		`APPL_WAIT_SIG(clk, (dut_finish_valid & dut_finish_ready))		
+		`APPL_WAIT_SIG(clk, (dut_finish_valid & dut_finish_ready), 0)		
 	end while(1);
 end
 `else
