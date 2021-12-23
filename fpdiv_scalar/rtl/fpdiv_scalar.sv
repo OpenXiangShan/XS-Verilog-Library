@@ -6,7 +6,7 @@
 // Last Modified Time   : 2021-12-23 17:13:24
 // ========================================================================================================
 // Description	:
-// A Scala Floating Point Divider based on radix-2 srt algorithm.
+// A Scalar Floating Point Divider based on radix-2 srt algorithm.
 // It supports fp16/32/64. (Maybe add support for bfloat16/tfloat32 in the future ??)
 // ========================================================================================================
 // ========================================================================================================
@@ -265,7 +265,7 @@ logic rem_is_not_zero;
 logic sticky_bit;
 
 logic [(FP64_FRAC_W - 1)-1:0] frac_before_round;
-logic guard_bi;
+logic guard_bit;
 logic round_bit;
 logic [12-1:0] exp_before_round;
 logic inexact;
