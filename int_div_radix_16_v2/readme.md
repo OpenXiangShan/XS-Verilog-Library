@@ -1,1 +1,0 @@
-I only test the RTL in Modelsim(Windows).
