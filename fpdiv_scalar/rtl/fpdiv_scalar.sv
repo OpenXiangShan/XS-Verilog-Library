@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-12-01 21:23:29
-// Last Modified Time   : 2021-12-23 17:13:24
+// Last Modified Time   : 2022-01-02 19:30:20
 // ========================================================================================================
 // Description	:
 // A Scalar Floating Point Divider based on radix-2 srt algorithm.
@@ -70,10 +70,10 @@ module fpdiv_scalar #(
 // SPECULATIVE_MSB_W = "number of srt iteration per cycles" * 2 = 3 * 2 = 6
 localparam SPECULATIVE_MSB_W = 6;
 
-// ITN = InTerNal
+
 // 1-bit in the front of frac[52:0] as sign
 // 1-bit after frac[52:0] for initial operation
-localparam ITN_W = 1 + 53 + 1;
+localparam REM_W = 1 + 53 + 1;
 
 localparam FP64_FRAC_W = 52 + 1;
 localparam FP32_FRAC_W = 23 + 1;
@@ -170,8 +170,6 @@ logic op_invalid_div_d;
 logic op_invalid_div_q;
 logic divided_by_zero_d;
 logic divided_by_zero_q;
-logic res_is_from_opa_d;
-logic res_is_from_opa_q;
 logic [2-1:0] fp_format_d;
 logic [2-1:0] fp_format_q;
 logic [3-1:0] rm_d;
@@ -188,22 +186,22 @@ logic [FP64_FRAC_W-1:0] opb_frac_pre_shifted;
 logic [FP64_FRAC_W-1:0] opa_frac_l_shifted;
 logic [FP64_FRAC_W-1:0] opb_frac_l_shifted;
 
-logic [ITN_W-1:0] frac_rem_sum_iter_init;
-logic [ITN_W-1:0] frac_rem_carry_iter_init;
+logic [REM_W-1:0] frac_rem_sum_iter_init;
+logic [REM_W-1:0] frac_rem_carry_iter_init;
 
 logic frac_rem_sum_en;
-logic [ITN_W-1:0] frac_rem_sum_d;
-logic [ITN_W-1:0] frac_rem_sum_q;
+logic [REM_W-1:0] frac_rem_sum_d;
+logic [REM_W-1:0] frac_rem_sum_q;
 logic frac_rem_carry_en;
-logic [ITN_W-1:0] frac_rem_carry_d;
-logic [ITN_W-1:0] frac_rem_carry_q;
+logic [REM_W-1:0] frac_rem_carry_d;
+logic [REM_W-1:0] frac_rem_carry_q;
 
-logic [ITN_W-1:0] frac_rem_sum_in [3-1:0];
-logic [ITN_W-1:0] frac_rem_carry_in [3-1:0];
-logic [ITN_W-1:0] frac_rem_sum_out [3-1:0];
-logic [ITN_W-1:0] frac_rem_carry_out [3-1:0];
-logic [(ITN_W - SPECULATIVE_MSB_W)-1:0] frac_rem_sum_out_lsbs [3-1:0];
-logic [(ITN_W - SPECULATIVE_MSB_W)-1:0] frac_rem_carry_out_lsbs [3-1:0];
+logic [REM_W-1:0] frac_rem_sum_in [3-1:0];
+logic [REM_W-1:0] frac_rem_carry_in [3-1:0];
+logic [REM_W-1:0] frac_rem_sum_out [3-1:0];
+logic [REM_W-1:0] frac_rem_carry_out [3-1:0];
+logic [(REM_W - SPECULATIVE_MSB_W)-1:0] frac_rem_sum_out_lsbs [3-1:0];
+logic [(REM_W - SPECULATIVE_MSB_W)-1:0] frac_rem_carry_out_lsbs [3-1:0];
 logic [SPECULATIVE_MSB_W-1:0] frac_rem_sum_out_msbs [3-1:0];
 logic [SPECULATIVE_MSB_W-1:0] frac_rem_carry_out_msbs [3-1:0];
 logic [SPECULATIVE_MSB_W-1:0] frac_rem_sum_out_msbs_zero [3-1:0];
@@ -220,17 +218,17 @@ logic frac_divisor_en;
 logic [(FP64_FRAC_W + 1)-1:0] frac_divisor_iter_init;
 logic [(FP64_FRAC_W + 1)-1:0] frac_divisor_d;
 logic [(FP64_FRAC_W + 1)-1:0] frac_divisor_q;
-logic [ITN_W-1:0] div_csa_val [3-1:0];
+logic [REM_W-1:0] div_csa_val [3-1:0];
 
-logic [ITN_W-1:0] quo_iter_init;
+logic [REM_W-1:0] quo_iter_init;
 logic quo_iter_en;
-logic [ITN_W-1:0] quo_iter_d;
-logic [ITN_W-1:0] quo_iter_q;
+logic [REM_W-1:0] quo_iter_d;
+logic [REM_W-1:0] quo_iter_q;
 logic quo_m1_iter_en;
-logic [ITN_W-1:0] quo_m1_iter_d;
-logic [ITN_W-1:0] quo_m1_iter_q;
-logic [ITN_W-1:0] nxt_quo_iter [3-1:0];
-logic [ITN_W-1:0] nxt_quo_m1_iter [3-1:0];
+logic [REM_W-1:0] quo_m1_iter_d;
+logic [REM_W-1:0] quo_m1_iter_q;
+logic [REM_W-1:0] nxt_quo_iter [3-1:0];
+logic [REM_W-1:0] nxt_quo_m1_iter [3-1:0];
 
 logic [2-1:0] quo_dig [3-1:0];
 logic [2-1:0] quo_dig_zero [3-1:0];
@@ -246,16 +244,16 @@ logic [5-1:0] iter_num_d;
 logic [5-1:0] iter_num_q;
 logic final_iter;
 
-logic [ITN_W-1:0] nr_frac_rem;
-logic [ITN_W-1:0] nr_frac_rem_plus_d;
+logic [REM_W-1:0] nr_frac_rem;
+logic [REM_W-1:0] nr_frac_rem_plus_d;
 
 logic quo_msb;
-logic [ITN_W-1:0] quo_pre_shift;
-logic [ITN_W-1:0] quo_m1_pre_shift;
-logic [(2 * ITN_W)-1:0] quo_r_shifted;
-logic [(2 * ITN_W)-1:0] quo_m1_r_shifted;
-logic [(ITN_W + 1)-1:0] sticky_without_rem;
-logic [(ITN_W - 1)-1:0] correct_quo_r_shifted;
+logic [(REM_W-1)-1:0] quo_pre_shift;
+logic [(REM_W-1)-1:0] quo_m1_pre_shift;
+logic [(2 * (REM_W - 1))-1:0] quo_r_shifted;
+logic [(2 * (REM_W - 1))-1:0] quo_m1_r_shifted;
+logic [(REM_W - 1)-1:0] sticky_without_rem;
+logic [(REM_W - 1)-1:0] correct_quo_r_shifted;
 
 logic [13-1:0] r_shift_num_pre;
 logic [13-1:0] r_shift_num_pre_minus_limit;
@@ -376,7 +374,6 @@ assign res_is_exact_zero = opa_is_zero | opb_is_inf;
 assign opb_is_power_of_2 = opb_frac_is_zero & ~res_is_nan;
 // When result is not nan, and dividend is not inf, "dividend / 0" should lead to "DIV_BY_ZERO" exception.
 assign divided_by_zero = ~res_is_nan & ~opa_is_inf & opb_is_zero;
-// assign res_is_from_opa = opa_is_snan | (opa_is_qnan & ~opb_is_snan & ~op_invalid_div) | opb_is_power_of_2;
 
 assign opa_l_shift_num_d = {(6){opa_exp_is_zero}} & opa_l_shift_num_pre;
 assign opb_l_shift_num_d = {(6){opb_exp_is_zero}} & opb_l_shift_num_pre;
@@ -387,11 +384,6 @@ assign op_exp_diff[12:0] =
 - {1'b0, opb_exp_biased}
 + {7'b0, opb_l_shift_num_d};
 
-
-// when (res_is_nan)
-// res_is_from_opa = 1: fpdiv_res_o = opa_i
-// res_is_from_opa = 0: if(op_invalid_div = 0) -> fpdiv_res_o = opb_i; else -> fpdiv_res_o = default NaN
-// assign out_sign_d = res_is_nan ? (res_is_from_opa ? opa_sign : op_invalid_div ? 1'b0 : opb_sign) : (opa_sign ^ opb_sign);
 // Follow the rule in riscv-spec, just produce default NaN.
 assign out_sign_d = res_is_nan ? 1'b0 : (opa_sign ^ opb_sign);
 
@@ -401,7 +393,6 @@ assign res_is_exact_zero_d = res_is_exact_zero;
 assign opb_is_power_of_2_d = opb_is_power_of_2;
 assign op_invalid_div_d = op_invalid_div;
 assign divided_by_zero_d = divided_by_zero;
-// assign res_is_from_opa_d = res_is_from_opa;
 assign fp_format_d = fp_format_i;
 assign rm_d = rm_i;
 
@@ -414,7 +405,6 @@ always_ff @(posedge clk) begin
 		opb_is_power_of_2_q <= opb_is_power_of_2_d;
 		op_invalid_div_q <= op_invalid_div_d;
 		divided_by_zero_q <= divided_by_zero_d;
-		// res_is_from_opa_q <= res_is_from_opa_d;
 		fp_format_q <= fp_format_d;
 		opa_l_shift_num_q <= opa_l_shift_num_d;
 		opb_l_shift_num_q <= opb_l_shift_num_d;
@@ -434,7 +424,7 @@ assign exp_diff_adjusted =
 (nxt_quo_iter[2][54] ? out_exp_diff_q : exp_diff_m1);
 // In final_iter, we can know whether the MSB of quo is 1. So we can choose to decrease "exp_diff".
 assign out_exp_diff_en = start_handshaked | (fsm_q[FSM_ITER_BIT] & final_iter);
-assign out_exp_diff_d  = start_handshaked ? op_exp_diff : exp_diff_adjusted;
+assign out_exp_diff_d  = fsm_q[FSM_PRE_0_BIT] ? op_exp_diff : exp_diff_adjusted;
 always_ff @(posedge clk)
 	if(out_exp_diff_en)
 		out_exp_diff_q <= out_exp_diff_d;
@@ -477,8 +467,9 @@ lzc #(
 // ================================================================================================================================================
 // Do l_shift in pre_1
 // ================================================================================================================================================
-assign opa_frac_l_shifted = frac_rem_sum_q  [52:0] << opa_l_shift_num_q;
-assign opb_frac_l_shifted = frac_rem_carry_q[52:0] << opb_l_shift_num_q;
+// The MSB of frac_l_shifted must be 1 -> using a "(FP64_FRAC_W - 1)-bit" l_shifter is enough.
+assign opa_frac_l_shifted = {1'b1, frac_rem_sum_q  [51:0] << opa_l_shift_num_q};
+assign opb_frac_l_shifted = {1'b1, frac_rem_carry_q[51:0] << opb_l_shift_num_q};
 
 // For c[N-1:0] = a[N-1:0] - b[N-1:0], if a/b is in the true form, then let sum[N:0] = {a[N-1:0], 1'b1} + {~b[N-1:0], 1'b1}, c[N-1:0] = sum[N:1]
 // Some examples:
@@ -490,8 +481,9 @@ assign opb_frac_l_shifted = frac_rem_carry_q[52:0] << opb_l_shift_num_q;
 // 0_11011 + 1_01101 = 0_01000: (0_01000)[5:1] = 0_0100 = +4
 // According to the QDS, the 1st quo_dig must be "+1", so we need to do "a_frac_i - b_frac_i".
 // As a result, we should initialize "sum/carry" using the following value.
-assign frac_rem_sum_iter_init 	= opb_is_power_of_2_q ? 55'b0 : {1'b0,  opa_frac_l_shifted, 1'b1};
-assign frac_rem_carry_iter_init = opb_is_power_of_2_q ? 55'b0 : {1'b1, ~opb_frac_l_shifted, 1'b1};
+
+assign frac_rem_sum_iter_init 	= {1'b0,  opa_frac_l_shifted, 1'b1};
+assign frac_rem_carry_iter_init = {1'b1, ~opb_frac_l_shifted, 1'b1};
 
 assign frac_divisor_iter_init = {2'b0, opb_frac_l_shifted[51:0]};
 assign frac_divisor_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_POST_0_BIT];
@@ -507,14 +499,14 @@ always_ff @(posedge clk)
 
 assign frac_rem_sum_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
 assign frac_rem_sum_d  = 
-start_handshaked 		? {2'b0, 1'b1, opa_frac_pre_shifted[51:0]} : 
-fsm_q[FSM_PRE_1_BIT] 	? frac_rem_sum_iter_init : 
+fsm_q[FSM_PRE_0_BIT] ? {2'b0, 1'b1, opa_frac_pre_shifted[51:0]} : 
+fsm_q[FSM_PRE_1_BIT] ? frac_rem_sum_iter_init : 
 frac_rem_sum_out[2];
 	
 assign frac_rem_carry_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
 assign frac_rem_carry_d  = 
-start_handshaked 		? {2'b0, 1'b1, opb_frac_pre_shifted[51:0]} : 
-fsm_q[FSM_PRE_1_BIT] 	? frac_rem_carry_iter_init : 
+fsm_q[FSM_PRE_0_BIT] ? {2'b0, 1'b1, opb_frac_pre_shifted[51:0]} : 
+fsm_q[FSM_PRE_1_BIT] ? frac_rem_carry_iter_init : 
 frac_rem_carry_out[2];
 
 assign final_iter = (iter_num_q == 5'd0);
@@ -544,8 +536,8 @@ u_qds_s0 (
 
 generate for(i = 0; i < 3; i++) begin: g_csa_val_select
 	assign div_csa_val[i][55-1:0] = 
-	  ({(ITN_W){quo_dig[i][0]}} & ~{1'b0, 1'b1, frac_divisor_q[51:0], 1'b0})
-	| ({(ITN_W){quo_dig[i][1]}} &  {1'b0, 1'b1, frac_divisor_q[51:0], 1'b0});
+	  ({(REM_W){quo_dig[i][0]}} & ~{1'b0, 1'b1, frac_divisor_q[51:0], 1'b0})
+	| ({(REM_W){quo_dig[i][1]}} &  {1'b0, 1'b1, frac_divisor_q[51:0], 1'b0});
 end
 endgenerate
 
@@ -594,15 +586,15 @@ assign frac_rem_carry_in[2] = frac_rem_carry_out[1];
 generate for(i = 0; i < 3; i++) begin: g_speculative_msb_compress
 	// In fact, for LSB: 1'b0 ^ 1'b0 ^ div_csa_val[i][0] = div_csa_val[i][0], so maybe we should not use "XOR" operation for LSB (to save some gates...)
 	assign frac_rem_sum_out_lsbs[i] = 
-	  {frac_rem_sum_in  [i][0 +: (ITN_W - SPECULATIVE_MSB_W - 1)], 1'b0}
-	^ {frac_rem_carry_in[i][0 +: (ITN_W - SPECULATIVE_MSB_W - 1)], 1'b0}
-	^ div_csa_val[i][0 +: (ITN_W - SPECULATIVE_MSB_W)];
+	  {frac_rem_sum_in  [i][0 +: (REM_W - SPECULATIVE_MSB_W - 1)], 1'b0}
+	^ {frac_rem_carry_in[i][0 +: (REM_W - SPECULATIVE_MSB_W - 1)], 1'b0}
+	^ div_csa_val[i][0 +: (REM_W - SPECULATIVE_MSB_W)];
 	
 	// {frac_rem_sum_in[i][47:0], 1'b0}[0] and {frac_rem_carry_in[i][47:0], 1'b0}[0] is ZERO, so the csa result must be 0...
 	assign frac_rem_carry_out_lsbs[i] = {
-		  (frac_rem_sum_in  [i][0 +: (ITN_W - SPECULATIVE_MSB_W - 1)] & frac_rem_carry_in	[i][0 +: (ITN_W - SPECULATIVE_MSB_W - 1)])
-		| (frac_rem_sum_in  [i][0 +: (ITN_W - SPECULATIVE_MSB_W - 1)] & div_csa_val			[i][1 +: (ITN_W - SPECULATIVE_MSB_W - 1)])
-		| (frac_rem_carry_in[i][0 +: (ITN_W - SPECULATIVE_MSB_W - 1)] & div_csa_val			[i][1 +: (ITN_W - SPECULATIVE_MSB_W - 1)]),
+		  (frac_rem_sum_in  [i][0 +: (REM_W - SPECULATIVE_MSB_W - 1)] & frac_rem_carry_in	[i][0 +: (REM_W - SPECULATIVE_MSB_W - 1)])
+		| (frac_rem_sum_in  [i][0 +: (REM_W - SPECULATIVE_MSB_W - 1)] & div_csa_val			[i][1 +: (REM_W - SPECULATIVE_MSB_W - 1)])
+		| (frac_rem_carry_in[i][0 +: (REM_W - SPECULATIVE_MSB_W - 1)] & div_csa_val			[i][1 +: (REM_W - SPECULATIVE_MSB_W - 1)]),
 		1'b0
 	};
 
@@ -619,8 +611,8 @@ generate for(i = 0; i < 3; i++) begin: g_speculative_msb_compress
 		.csa_plus_i				(frac_divisor_q[51 -: (SPECULATIVE_MSB_W - 2)]),
 		.csa_minus_i			(frac_divisor_q[51 -: (SPECULATIVE_MSB_W - 2)]),
 		
-		.rem_sum_i				(frac_rem_sum_in  [i][(ITN_W-2) -: SPECULATIVE_MSB_W]),
-		.rem_carry_i			(frac_rem_carry_in[i][(ITN_W-2) -: SPECULATIVE_MSB_W]),
+		.rem_sum_i				(frac_rem_sum_in  [i][(REM_W-2) -: SPECULATIVE_MSB_W]),
+		.rem_carry_i			(frac_rem_carry_in[i][(REM_W-2) -: SPECULATIVE_MSB_W]),
 
 		.rem_sum_zero_o			(frac_rem_sum_out_msbs_zero  [i][SPECULATIVE_MSB_W-1:0]),
 		.rem_carry_zero_o		(frac_rem_carry_out_msbs_zero[i][SPECULATIVE_MSB_W-1:0]),
@@ -674,9 +666,9 @@ assign quo_iter_init = opb_is_power_of_2_q ? (
 assign quo_iter_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT];
 // quo_iter_q/quo_m1_iter_q is also used to store the "quo/rem" before rounding.
 // The 1st quo_dig must be "+1"
-assign quo_iter_d  = fsm_q[FSM_PRE_1_BIT] ? quo_iter_init : fsm_q[FSM_ITER_BIT] ? nxt_quo_iter[2] : {correct_quo_r_shifted, sticky_without_rem[55]};
+assign quo_iter_d  = fsm_q[FSM_PRE_1_BIT] ? quo_iter_init : fsm_q[FSM_ITER_BIT] ? nxt_quo_iter[2] : {correct_quo_r_shifted, 1'b0};
 assign quo_m1_iter_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT];
-assign quo_m1_iter_d  = fsm_q[FSM_PRE_1_BIT] ? '0 : fsm_q[FSM_ITER_BIT] ? nxt_quo_m1_iter[2] : sticky_without_rem[54:0];
+assign quo_m1_iter_d  = fsm_q[FSM_PRE_1_BIT] ? '0 : fsm_q[FSM_ITER_BIT] ? nxt_quo_m1_iter[2] : {1'b0, sticky_without_rem};
 always_ff @(posedge clk) begin
 	if(quo_iter_en)
 		quo_iter_q <= quo_iter_d;
@@ -695,25 +687,35 @@ assign nr_frac_rem_plus_d = frac_rem_sum_q + frac_rem_carry_q + {1'b0, 1'b1, fra
 // When (exp_diff <= 0), result might be denormal, we need to r_shift the quo before rounding
 // To speed up, use 2 r_shifter here (area cost is increased...)
 // The MSB of quo and quo_m1 must be the same (See docs for proof).
+// Take fp16 as the example, you may think that "quo_iter_q[12:0] = 1.000000000000, quo_m1_iter_q[12:0] = 0.111111111111" could happen.
+// But in fact it is impossible.
 assign quo_msb = (fp_format_q == 2'd0) ? quo_iter_q[12] : (fp_format_q == 2'd1) ? quo_iter_q[27] : quo_iter_q[54];
 
-// For FP32, we get extra 2-bit quo -> should merge them.
-assign quo_pre_shift = quo_msb ? {quo_iter_q[54:28], (fp_format_q == 2'd1) ? {quo_iter_q[27:3], |(quo_iter_q[2:0])} : quo_iter_q[27:0]} : 
-{quo_iter_q[53:27], (fp_format_q == 2'd1) ? {quo_iter_q[26:2], |(quo_iter_q[1:0])} : {quo_iter_q[26:0], 1'b0}};
+// Although we already get 55-bit Q[54:0] for fp64, but we don't need the Q[0] to calculate sticky_bit, reason:
+// Q[0] = 0: rem could be ZERO/NON_ZERO
+// Q[0] = 1: rem must also be NON_ZERO
+// The proof is very easy: Q[0] is the digit in "2 ^ -54" of "a_frac[52:0] / b_frac[52:0]". When Q[0] = 1, "exact division" is not possible.
+// In conlusion, we only need "REM" to calculate sticky_bit
+// The same optimization could also be applied to fp16/fp32
+// With this optimization we could save some "OR" gates, and the width of the r_shifter is also decreased.
 
-assign quo_m1_pre_shift = quo_msb ? {quo_m1_iter_q[54:28], (fp_format_q == 2'd1) ? {quo_m1_iter_q[27:3], |(quo_m1_iter_q[2:0])} : quo_m1_iter_q[27:0]} : 
-{quo_m1_iter_q[53:27], (fp_format_q == 2'd1) ? {quo_m1_iter_q[26:2], |(quo_m1_iter_q[1:0])} : {quo_m1_iter_q[26:0], 1'b0}};
+// For FP32, we get extra 2-bit quo -> should merge them.
+assign quo_pre_shift = quo_msb ? {quo_iter_q[54:28], (fp_format_q == 2'd1) ? quo_iter_q[27:3] : quo_iter_q[27:1]} : 
+{quo_iter_q[53:27], (fp_format_q == 2'd1) ? quo_iter_q[26:2] : quo_iter_q[26:0]};
+
+assign quo_m1_pre_shift = quo_msb ? {quo_m1_iter_q[54:28], (fp_format_q == 2'd1) ? quo_m1_iter_q[27:3]: quo_m1_iter_q[27:1]} : 
+{quo_m1_iter_q[53:27], (fp_format_q == 2'd1) ? quo_m1_iter_q[26:2] : quo_m1_iter_q[26:0]};
 
 assign r_shift_num_pre = 13'd1 - out_exp_diff_q;
 assign r_shift_num_pre_minus_limit = 13'd1 - out_exp_diff_q - R_SHIFT_NUM_LIMIT;
 assign r_shift_num = r_shift_num_pre[12] ? 6'd0 : ~r_shift_num_pre_minus_limit[12] ? R_SHIFT_NUM_LIMIT : r_shift_num_pre[5:0];
 
-// TODO: The shifter in post_0 could be combined with the shifter used in pre_1 if the timing is good enough.
-assign quo_r_shifted    = {quo_pre_shift,    55'b0} >> r_shift_num;
-assign quo_m1_r_shifted = {quo_m1_pre_shift, 55'b0} >> r_shift_num;
+// TODO: The r_shifter in post_0 could be combined with the l_shifter used in pre_1 if the timing is good enough, to save some area..
+assign quo_r_shifted    = {quo_pre_shift,    54'b0} >> r_shift_num;
+assign quo_m1_r_shifted = {quo_m1_pre_shift, 54'b0} >> r_shift_num;
 
-assign sticky_without_rem = nr_frac_rem[54] ? quo_m1_r_shifted[0 +: 56] : quo_r_shifted[0 +: 56];
-assign correct_quo_r_shifted = nr_frac_rem[54] ? quo_m1_r_shifted[56 +: 54] : quo_r_shifted[56 +: 54];
+assign sticky_without_rem = nr_frac_rem[REM_W-1] ? quo_m1_r_shifted[0 +: (REM_W-1)] : quo_r_shifted[0 +: (REM_W-1)];
+assign correct_quo_r_shifted = nr_frac_rem[REM_W-1] ? quo_m1_r_shifted[(REM_W-1) +: (REM_W-1)] : quo_r_shifted[(REM_W-1) +: (REM_W-1)];
 
 // ================================================================================================================================================
 // post_1
@@ -723,7 +725,7 @@ assign correct_quo_r_shifted = nr_frac_rem[54] ? quo_m1_r_shifted[56 +: 54] : qu
 // Rounding logic
 // ================================================================================================================================================
 assign rem_is_not_zero = (frac_divisor_q != 0);
-assign sticky_bit = rem_is_not_zero | (|{quo_iter_q[0], quo_m1_iter_q});
+assign sticky_bit = (rem_is_not_zero & ~opb_is_power_of_2_q) | (quo_m1_iter_q[0 +: (REM_W-1)] != 0);
 
 // quo_iter_q[54] is not needed...
 // For fp64: now the decimal point is between "quo_iter_q[54], quo_iter_q[53]", for rounding operation, we only need the fractional part.
