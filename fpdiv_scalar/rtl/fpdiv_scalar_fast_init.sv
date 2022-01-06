@@ -3,11 +3,11 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-12-01 21:23:29
-// Last Modified Time   : 2022-01-03 09:03:54
+// Last Modified Time   : 2022-01-06 08:13:21
 // ========================================================================================================
 // Description	:
 // A Scalar Floating Point Divider based on radix-2 srt algorithm.
-// It supports fp16/32/64. (Maybe add support for bfloat16/tfloat32 in the future ??)
+// It supports fp16/32/64.
 // ========================================================================================================
 // ========================================================================================================
 // Copyright (C) 2021, HYF. All Rights Reserved.
@@ -147,7 +147,6 @@ logic opb_exp_is_max;
 logic opa_is_zero;
 logic opb_is_zero;
 
-
 logic opa_frac_is_zero;
 logic opb_frac_is_zero;
 logic opa_frac_is_zero_fp32_fp16;
@@ -161,17 +160,16 @@ logic opa_is_snan;
 logic opb_is_snan;
 logic opa_is_nan;
 logic opb_is_nan;
-logic op_invalid_div;
+
+// ================================================================================================================================================
+// In these special cases, srt_iter is not needed so we can get the correct result with only several cycles.
 logic res_is_nan;
 logic res_is_inf;
 logic res_is_exact_zero;
 logic opb_is_power_of_2;
+logic op_invalid_div;
 logic divided_by_zero;
-logic early_finish;
-logic skip_iter;
 
-logic out_sign_d;
-logic out_sign_q;
 logic res_is_nan_d;
 logic res_is_nan_q;
 logic res_is_inf_d;
@@ -184,6 +182,13 @@ logic op_invalid_div_d;
 logic op_invalid_div_q;
 logic divided_by_zero_d;
 logic divided_by_zero_q;
+
+logic early_finish;
+logic skip_iter;
+// ================================================================================================================================================
+
+logic out_sign_d;
+logic out_sign_q;
 logic [2-1:0] fp_format_d;
 logic [2-1:0] fp_format_q;
 logic [3-1:0] rm_d;
@@ -197,10 +202,8 @@ logic [5-1:0] opa_l_shift_num_fp32_fp16;
 logic [5-1:0] opb_l_shift_num_fp32_fp16;
 logic [FP32_FRAC_W-1:0] opa_frac_l_shifted_fp32_fp16;
 logic [FP32_FRAC_W-1:0] opb_frac_l_shifted_fp32_fp16;
-logic [6-1:0] opa_l_shift_num_d;
-logic [6-1:0] opa_l_shift_num_q;
-logic [6-1:0] opb_l_shift_num_d;
-logic [6-1:0] opb_l_shift_num_q;
+logic [6-1:0] opa_l_shift_num;
+logic [6-1:0] opb_l_shift_num;
 logic [6-1:0] opa_l_shift_num_pre;
 logic [6-1:0] opb_l_shift_num_pre;
 logic [FP64_FRAC_W-1:0] opa_frac_pre_shifted;
@@ -210,7 +213,6 @@ logic [FP64_FRAC_W-1:0] opb_frac_l_shifted;
 
 logic [REM_W-1:0] frac_rem_sum_iter_init;
 logic [REM_W-1:0] frac_rem_carry_iter_init;
-
 logic frac_rem_sum_en;
 logic [REM_W-1:0] frac_rem_sum_d;
 logic [REM_W-1:0] frac_rem_sum_q;
@@ -233,13 +235,17 @@ logic [SPECULATIVE_MSB_W-1:0] frac_rem_carry_out_msbs_minus [3-1:0];
 logic [SPECULATIVE_MSB_W-1:0] frac_rem_sum_out_msbs_plus [3-1:0];
 logic [SPECULATIVE_MSB_W-1:0] frac_rem_carry_out_msbs_plus [3-1:0];
 
+// This reg is also used to store the "l_shift_num" got in pre_0, since the value of "divisor" is not needed until FSM_ITER
+// {opa_l_shift_num[6-1:0], opb_l_shift_num[6-1:0]}
 // Also use this reg to remember "frac_rem" generated in post_0, so we can get sticky_bit in post_1
-// Since frac_rem must be positive, so 54-bit is enough.
-// frac_divisor[52] must be 1 so don't need to remember it
-logic frac_divisor_en;
-logic [(FP64_FRAC_W + 1)-1:0] frac_divisor_iter_init;
-logic [(FP64_FRAC_W + 1)-1:0] frac_divisor_d;
-logic [(FP64_FRAC_W + 1)-1:0] frac_divisor_q;
+// opb_frac_l_shifted[52] must be 1 so don't need to remember it
+logic frac_divisor_hi_en;
+logic frac_divisor_lo_en;
+logic [FP64_FRAC_W-1:0] frac_divisor_iter_init;
+logic [(FP64_FRAC_W-1-12)-1:0] frac_divisor_hi_d;
+logic [(FP64_FRAC_W-1-12)-1:0] frac_divisor_hi_q;
+logic [12-1:0] frac_divisor_lo_d;
+logic [12-1:0] frac_divisor_lo_q;
 logic [REM_W-1:0] div_csa_val [3-1:0];
 
 logic [REM_W-1:0] quo_iter_init;
@@ -389,8 +395,8 @@ assign res_is_exact_zero = opa_is_zero | opb_is_inf;
 // When result is not nan, and dividend is not inf, "dividend / 0" should lead to "DIV_BY_ZERO" exception.
 assign divided_by_zero = ~res_is_nan & ~opa_is_inf & opb_is_zero;
 
-assign opa_l_shift_num_d = {(6){opa_exp_is_zero}} & opa_l_shift_num_pre;
-assign opb_l_shift_num_d = {(6){opb_exp_is_zero}} & opb_l_shift_num_pre;
+assign opa_l_shift_num = {(6){opa_exp_is_zero}} & opa_l_shift_num_pre;
+assign opb_l_shift_num = {(6){opb_exp_is_zero}} & opb_l_shift_num_pre;
 assign opa_exp_plus_biased = {1'b0, opa_exp_biased[10:0]} + ((fp_format_i == 2'd0) ? 12'd15 : (fp_format_i == 2'd1) ? 12'd127 : 12'd1023);
 
 generate
@@ -411,13 +417,13 @@ if(FAST_INIT == 1) begin
 	& ~((fp_format_i == 2'd2) ? opb_frac_is_zero : opb_frac_is_zero_fp32_fp16) 
 	& ((fp_format_i == 2'd0) ? ~opb_i[9] : (fp_format_i == 2'd1) ? ~opb_i[22] : ~opb_i[51]);
 
-	assign opb_is_power_of_2 = ((fp_format_i == 2'd2) ? opb_frac_is_zero : opb_frac_is_zero_fp32_fp16) & ~res_is_nan;
+	assign opb_is_power_of_2 = ((fp_format_i == 2'd2) ? opb_frac_is_zero : opb_frac_is_zero_fp32_fp16);
 
 	assign op_exp_diff[12:0] = 
 	  {1'b0, opa_exp_plus_biased}
-	- {7'b0, (fp_format_i == 2'd2) ? opa_l_shift_num_d : {1'b0, opa_l_shift_num_fp32_fp16}}
+	- {7'b0, (fp_format_i == 2'd2) ? opa_l_shift_num : {1'b0, opa_l_shift_num_fp32_fp16}}
 	- {1'b0, opb_exp_biased}
-	+ {7'b0, (fp_format_i == 2'd2) ? opb_l_shift_num_d : {1'b0, opb_l_shift_num_fp32_fp16}};
+	+ {7'b0, (fp_format_i == 2'd2) ? opb_l_shift_num : {1'b0, opb_l_shift_num_fp32_fp16}};
 
 end else begin
 
@@ -431,18 +437,20 @@ end else begin
 	assign opb_is_snan = opb_exp_is_max & ~opb_frac_is_zero & ((fp_format_i == 2'd0) ? ~opb_i[9] : (fp_format_i == 2'd1) ? ~opb_i[22] : ~opb_i[51]);
 
 	// For this signal, don't consider the value of exp, and don't consider denormal number.
-	assign opb_is_power_of_2 = opb_frac_is_zero & ~res_is_nan;
+	assign opb_is_power_of_2 = opb_frac_is_zero;
 	assign op_exp_diff[12:0] = 
 	  {1'b0, opa_exp_plus_biased}
-	- {7'b0, opa_l_shift_num_d}
+	- {7'b0, opa_l_shift_num}
 	- {1'b0, opb_exp_biased}
-	+ {7'b0, opb_l_shift_num_d};
+	+ {7'b0, opb_l_shift_num};
 
 end
 endgenerate
 
 // Follow the rule in riscv-spec, just produce default NaN.
 assign out_sign_d = res_is_nan ? 1'b0 : (opa_sign ^ opb_sign);
+assign fp_format_d = fp_format_i;
+assign rm_d = rm_i;
 
 assign res_is_nan_d = res_is_nan;
 assign res_is_inf_d = res_is_inf;
@@ -450,22 +458,19 @@ assign res_is_exact_zero_d = res_is_exact_zero;
 assign opb_is_power_of_2_d = opb_is_power_of_2;
 assign op_invalid_div_d = op_invalid_div;
 assign divided_by_zero_d = divided_by_zero;
-assign fp_format_d = fp_format_i;
-assign rm_d = rm_i;
 
 always_ff @(posedge clk) begin
 	if(start_handshaked) begin		
 		out_sign_q <= out_sign_d;
+		fp_format_q <= fp_format_d;
+		rm_q <= rm_d;
+
 		res_is_nan_q <= res_is_nan_d;
 		res_is_inf_q <= res_is_inf_d;
 		res_is_exact_zero_q <= res_is_exact_zero_d;
 		opb_is_power_of_2_q <= opb_is_power_of_2_d;
 		op_invalid_div_q <= op_invalid_div_d;
 		divided_by_zero_q <= divided_by_zero_d;
-		fp_format_q <= fp_format_d;
-		opa_l_shift_num_q <= opa_l_shift_num_d;
-		opb_l_shift_num_q <= opb_l_shift_num_d;
-		rm_q <= rm_d;
 	end
 end
 
@@ -598,8 +603,8 @@ endgenerate
 // Do l_shift in pre_1, for fp64
 // ================================================================================================================================================
 // The MSB of frac_l_shifted must be 1 -> using a "(FP64_FRAC_W - 1)-bit" l_shifter is enough.
-assign opa_frac_l_shifted = {1'b1, frac_rem_sum_q  [51:0] << opa_l_shift_num_q};
-assign opb_frac_l_shifted = {1'b1, frac_rem_carry_q[51:0] << opb_l_shift_num_q};
+assign opa_frac_l_shifted = {1'b1, quo_iter_q   [51:0] << frac_divisor_lo_q[11:6]};
+assign opb_frac_l_shifted = {1'b1, quo_m1_iter_q[51:0] << frac_divisor_lo_q[ 5:0]};
 
 // For c[N-1:0] = a[N-1:0] - b[N-1:0], if a/b is in the true form, then let sum[N:0] = {a[N-1:0], 1'b1} + {~b[N-1:0], 1'b1}, c[N-1:0] = sum[N:1]
 // Some examples:
@@ -632,50 +637,52 @@ if(FAST_INIT == 1) begin
 		1'b1
 	};
 
-	assign frac_divisor_iter_init = {
-		2'b0, 
-		fsm_q[FSM_PRE_1_BIT] ? opb_frac_l_shifted[51:0] : 
-		(fp_format_i == 2'd2) ? opb_i[51:0] : 
-		{opb_frac_l_shifted_fp32_fp16[0 +: (FP32_FRAC_W - 1)], {((FP64_FRAC_W - 1) - ((FP32_FRAC_W - 1))){1'b0}}}
-	};
+	assign frac_divisor_hi_en = (start_handshaked & ~need_2_cycle_init) | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_POST_0_BIT];
+	assign frac_divisor_hi_d  = 
+	fsm_q[FSM_PRE_0_BIT] ? ((fp_format_i != 2'd2) ? {opb_frac_l_shifted_fp32_fp16[0 +: (FP32_FRAC_W - 1)], 17'b0} : opb_i[51:12]) : 
+	fsm_q[FSM_PRE_1_BIT] ? opb_frac_l_shifted[51:12] : 
+	(nr_frac_rem[54] ? nr_frac_rem_plus_d[51:12] : nr_frac_rem[51:12]);
+		
 
-	assign frac_divisor_en = (start_handshaked & ~need_2_cycle_init) | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_POST_0_BIT];
-	assign frac_divisor_d  = 
-	(fsm_q[FSM_PRE_0_BIT] | fsm_q[FSM_PRE_1_BIT]) ? frac_divisor_iter_init : 
-	(nr_frac_rem[54] ? nr_frac_rem_plus_d[53:0] : nr_frac_rem[53:0]);
+	assign frac_divisor_lo_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_POST_0_BIT];
+	assign frac_divisor_lo_d  = 
+	fsm_q[FSM_PRE_0_BIT] ? ((fp_format_i != 2'd2) ? 12'b0 : ~need_2_cycle_init ? opb_i[11:0] : {opa_l_shift_num[6-1:0], opb_l_shift_num[6-1:0]}) : 
+	fsm_q[FSM_PRE_1_BIT] ? opb_frac_l_shifted[11:0] : 
+	(nr_frac_rem[54] ? nr_frac_rem_plus_d[11:0] : nr_frac_rem[11:0]);
 
-	assign frac_rem_sum_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
-	assign frac_rem_sum_d  = 
-	(fsm_q[FSM_PRE_0_BIT] & need_2_cycle_init) ? {2'b0, 1'b1, opa_frac_pre_shifted[51:0]} : 
-	(fsm_q[FSM_PRE_0_BIT] | fsm_q[FSM_PRE_1_BIT]) ? frac_rem_sum_iter_init : 
-	frac_rem_sum_out[2];
+
+	assign frac_rem_sum_en = (start_handshaked & ~need_2_cycle_init) | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
+	assign frac_rem_sum_d  = (fsm_q[FSM_PRE_0_BIT] | fsm_q[FSM_PRE_1_BIT]) ? frac_rem_sum_iter_init : frac_rem_sum_out[2];
 	
-	assign frac_rem_carry_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
-	assign frac_rem_carry_d  = 
-	(fsm_q[FSM_PRE_0_BIT] & need_2_cycle_init) ? {2'b0, 1'b1, opb_frac_pre_shifted[51:0]} : 
-	(fsm_q[FSM_PRE_0_BIT] | fsm_q[FSM_PRE_1_BIT]) ? frac_rem_carry_iter_init : 
-	frac_rem_carry_out[2];
+	assign frac_rem_carry_en = (start_handshaked & ~need_2_cycle_init) | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
+	assign frac_rem_carry_d  = (fsm_q[FSM_PRE_0_BIT] | fsm_q[FSM_PRE_1_BIT]) ? frac_rem_carry_iter_init : frac_rem_carry_out[2];
 
 end else begin
 	
 	assign frac_rem_sum_iter_init 	= {1'b0,  opa_frac_l_shifted, 1'b1};
 	assign frac_rem_carry_iter_init = {1'b1, ~opb_frac_l_shifted, 1'b1};
 
-	assign frac_divisor_iter_init = {2'b0, opb_frac_l_shifted[51:0]};
+	assign frac_divisor_iter_init = opb_frac_l_shifted[(FP64_FRAC_W-1)-1:0];
 
-	assign frac_divisor_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_POST_0_BIT];
+	assign frac_divisor_hi_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_POST_0_BIT];
 	// Choose the right "frac_rem" according to the sign
-	assign frac_divisor_d  = fsm_q[FSM_PRE_1_BIT] ? frac_divisor_iter_init : (nr_frac_rem[54] ? nr_frac_rem_plus_d[53:0] : nr_frac_rem[53:0]);
+	assign frac_divisor_hi_d = 
+	fsm_q[FSM_PRE_1_BIT] ? frac_divisor_iter_init[(FP64_FRAC_W-1)-1:12] : 
+	(nr_frac_rem[54] ? nr_frac_rem_plus_d[51:12] : nr_frac_rem[51:12]);
 
-	assign frac_rem_sum_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
+	assign frac_divisor_lo_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_POST_0_BIT];
+	assign frac_divisor_lo_d  = 
+	fsm_q[FSM_PRE_0_BIT] ? {opa_l_shift_num[6-1:0], opb_l_shift_num[6-1:0]} : 
+	fsm_q[FSM_PRE_1_BIT] ? frac_divisor_iter_init[11:0] :
+	(nr_frac_rem[54] ? nr_frac_rem_plus_d[11:0] : nr_frac_rem[11:0]);
+
+	assign frac_rem_sum_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
 	assign frac_rem_sum_d  = 
-	fsm_q[FSM_PRE_0_BIT] ? {2'b0, 1'b1, opa_frac_pre_shifted[51:0]} : 
 	fsm_q[FSM_PRE_1_BIT] ? frac_rem_sum_iter_init : 
 	frac_rem_sum_out[2];
 		
-	assign frac_rem_carry_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
+	assign frac_rem_carry_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT];
 	assign frac_rem_carry_d  = 
-	fsm_q[FSM_PRE_0_BIT] ? {2'b0, 1'b1, opb_frac_pre_shifted[51:0]} : 
 	fsm_q[FSM_PRE_1_BIT] ? frac_rem_carry_iter_init : 
 	frac_rem_carry_out[2];
 end
@@ -690,8 +697,11 @@ assign iter_num_en = fsm_q[FSM_PRE_0_BIT] | fsm_q[FSM_ITER_BIT];
 assign iter_num_d  = fsm_q[FSM_PRE_0_BIT] ? ((fp_format_i == 2'd0) ? 5'd3 : (fp_format_i == 2'd1) ? 5'd8 : 5'd17) : (iter_num_q - 5'd1);
 
 always_ff @(posedge clk) begin
-	if(frac_divisor_en)
-		frac_divisor_q <= frac_divisor_d;
+	if(frac_divisor_hi_en)
+		frac_divisor_hi_q <= frac_divisor_hi_d;
+	if(frac_divisor_lo_en)
+		frac_divisor_lo_q <= frac_divisor_lo_d;
+
 	if(frac_rem_sum_en)
 		frac_rem_sum_q <= frac_rem_sum_d;
 	if(frac_rem_carry_en)
@@ -713,8 +723,8 @@ u_qds_s0 (
 
 generate for(i = 0; i < 3; i++) begin: g_csa_val_select
 	assign div_csa_val[i][55-1:0] = 
-	  ({(REM_W){quo_dig[i][0]}} & ~{1'b0, 1'b1, frac_divisor_q[51:0], 1'b0})
-	| ({(REM_W){quo_dig[i][1]}} &  {1'b0, 1'b1, frac_divisor_q[51:0], 1'b0});
+	  ({(REM_W){quo_dig[i][0]}} & ~{1'b0, 1'b1, frac_divisor_hi_q, frac_divisor_lo_q, 1'b0})
+	| ({(REM_W){quo_dig[i][1]}} &  {1'b0, 1'b1, frac_divisor_hi_q, frac_divisor_lo_q, 1'b0});
 end
 endgenerate
 
@@ -785,8 +795,8 @@ generate for(i = 0; i < 3; i++) begin: g_speculative_msb_compress
 	radix_2_csa #(
 		.WIDTH(SPECULATIVE_MSB_W + 1)
 	) u_csa_for_msb (
-		.csa_plus_i				(frac_divisor_q[51 -: (SPECULATIVE_MSB_W - 2)]),
-		.csa_minus_i			(frac_divisor_q[51 -: (SPECULATIVE_MSB_W - 2)]),
+		.csa_plus_i				(frac_divisor_hi_q[(FP64_FRAC_W-12-1)-1 -: (SPECULATIVE_MSB_W - 2)]),
+		.csa_minus_i			(frac_divisor_hi_q[(FP64_FRAC_W-12-1)-1 -: (SPECULATIVE_MSB_W - 2)]),
 		
 		.rem_sum_i				(frac_rem_sum_in  [i][(REM_W-2) -: SPECULATIVE_MSB_W]),
 		.rem_carry_i			(frac_rem_carry_in[i][(REM_W-2) -: SPECULATIVE_MSB_W]),
@@ -858,31 +868,48 @@ if(FAST_INIT == 1) begin
 
 	assign quo_iter_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT];
 	assign quo_iter_d  = 
+	(fsm_q[FSM_PRE_0_BIT] & need_2_cycle_init) ? {2'b0, 1'b1, opa_frac_pre_shifted[51:0]} : 
 	(fsm_q[FSM_PRE_0_BIT] | fsm_q[FSM_PRE_1_BIT]) ? quo_iter_init : 
 	fsm_q[FSM_ITER_BIT] ? nxt_quo_iter[2] : 
-	{correct_quo_r_shifted, 1'b0};
+	{correct_quo_r_shifted, nr_frac_rem[54] ? nr_frac_rem_plus_d[53] : nr_frac_rem[53]};
 
-	assign quo_m1_iter_en = start_handshaked | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT]; 
-	assign quo_m1_iter_d  = fsm_q[FSM_PRE_0_BIT] ? '0 : fsm_q[FSM_ITER_BIT] ? nxt_quo_m1_iter[2] : {1'b0, sticky_without_rem};
+	assign quo_m1_iter_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT]; 
+	assign quo_m1_iter_d  = 
+	(fsm_q[FSM_PRE_0_BIT] & need_2_cycle_init) ? {2'b0, 1'b1, opb_frac_pre_shifted[51:0]} :
+	(fsm_q[FSM_PRE_0_BIT] | fsm_q[FSM_PRE_1_BIT]) ? '0 :
+	fsm_q[FSM_ITER_BIT] ? nxt_quo_m1_iter[2] : 
+	{nr_frac_rem[54] ? nr_frac_rem_plus_d[52] : nr_frac_rem[52], sticky_without_rem};
 
 end else begin
 
+	// The 1st quo_dig must be "+1"
 	assign quo_iter_init = opb_is_power_of_2_q ? (
 		(fp_format_q == 2'd0) ? {{(55 - 2 - FP16_FRAC_W){1'b0}}, opa_frac_l_shifted[52 -: FP16_FRAC_W], 2'b0} : 
 		(fp_format_q == 2'd1) ? {{(55 - 4 - FP32_FRAC_W){1'b0}}, opa_frac_l_shifted[52 -: FP32_FRAC_W], 4'b0} : 
 		{{(55 - 2 - FP64_FRAC_W){1'b0}}, opa_frac_l_shifted[52 -: FP64_FRAC_W], 2'b0}
 	) : {54'b0, 1'b1};
 	
-	assign quo_iter_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT];
+	assign quo_iter_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT];
+
+	// Obviously, in the current design, frac_rem_sum_d/frac_rem_carry_d is in the critical path,
+	// so we should make the logic of those signals as simple as possible.	
+	// Here we choose to use Q/Q_M1 reg to store the opa_frac/opb_frac before normalization.
 	// quo_iter_q/quo_m1_iter_q is also used to store the "quo/rem" before rounding.
-	// The 1st quo_dig must be "+1"
-	assign quo_iter_d  = fsm_q[FSM_PRE_1_BIT] ? quo_iter_init : fsm_q[FSM_ITER_BIT] ? nxt_quo_iter[2] : {correct_quo_r_shifted, 1'b0};
-	assign quo_m1_iter_en = fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT];
-	assign quo_m1_iter_d  = fsm_q[FSM_PRE_1_BIT] ? '0 : fsm_q[FSM_ITER_BIT] ? nxt_quo_m1_iter[2] : {1'b0, sticky_without_rem};
+	assign quo_iter_d  = 
+	fsm_q[FSM_PRE_0_BIT] ? {2'b0, 1'b1, opa_frac_pre_shifted[51:0]} : 
+	fsm_q[FSM_PRE_1_BIT] ? quo_iter_init : 
+	fsm_q[FSM_ITER_BIT]  ? nxt_quo_iter[2] : 
+	{correct_quo_r_shifted, nr_frac_rem[54] ? nr_frac_rem_plus_d[53] : nr_frac_rem[53]};
+	
+	assign quo_m1_iter_en = start_handshaked | fsm_q[FSM_PRE_1_BIT] | fsm_q[FSM_ITER_BIT] | fsm_q[FSM_POST_0_BIT];
+	assign quo_m1_iter_d  = 
+	fsm_q[FSM_PRE_0_BIT] ? {2'b0, 1'b1, opb_frac_pre_shifted[51:0]} : 
+	fsm_q[FSM_PRE_1_BIT] ? '0 : 
+	fsm_q[FSM_ITER_BIT] ? nxt_quo_m1_iter[2] : 
+	{nr_frac_rem[54] ? nr_frac_rem_plus_d[52] : nr_frac_rem[52], sticky_without_rem};
 
 end
 endgenerate
-
 
 always_ff @(posedge clk) begin
 	if(quo_iter_en)
@@ -897,7 +924,7 @@ end
 
 // nr = non_redundant
 assign nr_frac_rem = frac_rem_sum_q + frac_rem_carry_q;
-assign nr_frac_rem_plus_d = frac_rem_sum_q + frac_rem_carry_q + {1'b0, 1'b1, frac_divisor_q[51:0], 1'b0};
+assign nr_frac_rem_plus_d = frac_rem_sum_q + frac_rem_carry_q + {1'b0, 1'b1, frac_divisor_hi_q, frac_divisor_lo_q, 1'b0};
 
 // When (exp_diff <= 0), result might be denormal, we need to r_shift the quo before rounding
 // To speed up, use 2 r_shifter here (area cost is increased...)
@@ -939,7 +966,9 @@ assign correct_quo_r_shifted = nr_frac_rem[REM_W-1] ? quo_m1_r_shifted[(REM_W-1)
 // ================================================================================================================================================
 // Rounding logic
 // ================================================================================================================================================
-assign rem_is_not_zero = (frac_divisor_q != 0);
+
+// {quo_iter_q[0], quo_m1_iter_q[54]} = nr_frac_rem[53:52] (Look at the expression of quo_iter_d/quo_m1_iter_d)
+assign rem_is_not_zero = ({quo_iter_q[0], quo_m1_iter_q[54], frac_divisor_hi_q, frac_divisor_lo_q} != 0);
 assign sticky_bit = (rem_is_not_zero & ~opb_is_power_of_2_q) | (quo_m1_iter_q[0 +: (REM_W-1)] != 0);
 
 // quo_iter_q[54] is not needed...
@@ -1006,7 +1035,7 @@ frac_after_round[0 +: 52];
 
 assign fflags_invalid_operation = op_invalid_div_q;
 assign fflags_div_by_zero = divided_by_zero_q;
-// When (overflow), res_is_exact_zero_q must be ZERO.
+// When (overflow), res_is_exact_zero must be ZERO.
 assign fflags_overflow = overflow & ~res_is_inf_q & ~res_is_nan_q;
 assign fflags_underflow = (exp_after_round == '0) & inexact & ~res_is_exact_zero_q & ~res_is_inf_q & ~res_is_nan_q;
 assign fflags_inexact = (overflow | inexact) & ~res_is_inf_q & ~res_is_nan_q & ~res_is_exact_zero_q;
