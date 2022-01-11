@@ -3,11 +3,14 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-12-01 21:23:29
-// Last Modified Time   : 2022-01-02 19:30:20
+// Last Modified Time   : 2022-01-05 10:45:26
 // ========================================================================================================
 // Description	:
 // A Scalar Floating Point Divider based on radix-2 srt algorithm.
-// It supports fp16/32/64. (Maybe add support for bfloat16/tfloat32 in the future ??)
+// It supports fp16/32/64.
+// From now on, this module will not be updated, because it can be completely replaced by "fpdiv_scalar_fast_init.sv".
+// Any further optimization will only be added to "fpdiv_scalar_fast_init.sv".
+// This file is only kept for reference.
 // ========================================================================================================
 // ========================================================================================================
 // Copyright (C) 2021, HYF. All Rights Reserved.
