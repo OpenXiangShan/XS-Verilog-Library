@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2021-12-01 21:23:29
-// Last Modified Time   : 2022-01-06 08:13:21
+// Last Modified Time   : 2022-01-09 14:44:51
 // ========================================================================================================
 // Description	:
 // A Scalar Floating Point Divider based on radix-2 srt algorithm.
@@ -80,6 +80,9 @@ localparam SPECULATIVE_MSB_W = 6;
 // 1-bit in the front of frac[52:0] as sign
 // 1-bit after frac[52:0] for initial operation
 localparam REM_W = 1 + 53 + 1;
+// For fp64, it will use 18 cycles for iter, so the total Q we get is:
+// 1 (got in the initial operation) + 18 * 3 = 55
+localparam QUO_W = 55;
 
 localparam FP64_FRAC_W = 52 + 1;
 localparam FP32_FRAC_W = 23 + 1;
@@ -248,15 +251,15 @@ logic [12-1:0] frac_divisor_lo_d;
 logic [12-1:0] frac_divisor_lo_q;
 logic [REM_W-1:0] div_csa_val [3-1:0];
 
-logic [REM_W-1:0] quo_iter_init;
+logic [QUO_W-1:0] quo_iter_init;
 logic quo_iter_en;
-logic [REM_W-1:0] quo_iter_d;
-logic [REM_W-1:0] quo_iter_q;
+logic [QUO_W-1:0] quo_iter_d;
+logic [QUO_W-1:0] quo_iter_q;
 logic quo_m1_iter_en;
-logic [REM_W-1:0] quo_m1_iter_d;
-logic [REM_W-1:0] quo_m1_iter_q;
-logic [REM_W-1:0] nxt_quo_iter [3-1:0];
-logic [REM_W-1:0] nxt_quo_m1_iter [3-1:0];
+logic [QUO_W-1:0] quo_m1_iter_d;
+logic [QUO_W-1:0] quo_m1_iter_q;
+logic [QUO_W-1:0] nxt_quo_iter [3-1:0];
+logic [QUO_W-1:0] nxt_quo_m1_iter [3-1:0];
 
 logic [2-1:0] quo_dig [3-1:0];
 logic [2-1:0] quo_dig_zero [3-1:0];
@@ -276,12 +279,12 @@ logic [REM_W-1:0] nr_frac_rem;
 logic [REM_W-1:0] nr_frac_rem_plus_d;
 
 logic quo_msb;
-logic [(REM_W-1)-1:0] quo_pre_shift;
-logic [(REM_W-1)-1:0] quo_m1_pre_shift;
-logic [(2 * (REM_W - 1))-1:0] quo_r_shifted;
-logic [(2 * (REM_W - 1))-1:0] quo_m1_r_shifted;
-logic [(REM_W - 1)-1:0] sticky_without_rem;
-logic [(REM_W - 1)-1:0] correct_quo_r_shifted;
+logic [(QUO_W-1)-1:0] quo_pre_shift;
+logic [(QUO_W-1)-1:0] quo_m1_pre_shift;
+logic [(2 * (QUO_W - 1))-1:0] quo_r_shifted;
+logic [(2 * (QUO_W - 1))-1:0] quo_m1_r_shifted;
+logic [(QUO_W - 1)-1:0] sticky_without_rem;
+logic [(QUO_W - 1)-1:0] correct_quo_r_shifted;
 
 logic [13-1:0] r_shift_num_pre;
 logic [13-1:0] r_shift_num_pre_minus_limit;
@@ -956,8 +959,8 @@ assign r_shift_num = r_shift_num_pre[12] ? 6'd0 : ~r_shift_num_pre_minus_limit[1
 assign quo_r_shifted    = {quo_pre_shift,    54'b0} >> r_shift_num;
 assign quo_m1_r_shifted = {quo_m1_pre_shift, 54'b0} >> r_shift_num;
 
-assign sticky_without_rem = nr_frac_rem[REM_W-1] ? quo_m1_r_shifted[0 +: (REM_W-1)] : quo_r_shifted[0 +: (REM_W-1)];
-assign correct_quo_r_shifted = nr_frac_rem[REM_W-1] ? quo_m1_r_shifted[(REM_W-1) +: (REM_W-1)] : quo_r_shifted[(REM_W-1) +: (REM_W-1)];
+assign sticky_without_rem = nr_frac_rem[REM_W-1] ? quo_m1_r_shifted[0 +: 54] : quo_r_shifted[0 +: 54];
+assign correct_quo_r_shifted = nr_frac_rem[REM_W-1] ? quo_m1_r_shifted[54 +: 54] : quo_r_shifted[54 +: 54];
 
 // ================================================================================================================================================
 // post_1
@@ -969,7 +972,7 @@ assign correct_quo_r_shifted = nr_frac_rem[REM_W-1] ? quo_m1_r_shifted[(REM_W-1)
 
 // {quo_iter_q[0], quo_m1_iter_q[54]} = nr_frac_rem[53:52] (Look at the expression of quo_iter_d/quo_m1_iter_d)
 assign rem_is_not_zero = ({quo_iter_q[0], quo_m1_iter_q[54], frac_divisor_hi_q, frac_divisor_lo_q} != 0);
-assign sticky_bit = (rem_is_not_zero & ~opb_is_power_of_2_q) | (quo_m1_iter_q[0 +: (REM_W-1)] != 0);
+assign sticky_bit = (rem_is_not_zero & ~opb_is_power_of_2_q) | (quo_m1_iter_q[0 +: 54] != 0);
 
 // quo_iter_q[54] is not needed...
 // For fp64: now the decimal point is between "quo_iter_q[54], quo_iter_q[53]", for rounding operation, we only need the fractional part.
