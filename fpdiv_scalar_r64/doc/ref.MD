@@ -1,0 +1,1 @@
+J. D. Bruguera, "Radix-64 Floating-Point Divider," 2018 IEEE 25th Symposium on Computer Arithmetic (ARITH), 2018, pp. 84-91, doi: 10.1109/ARITH.2018.8464815.

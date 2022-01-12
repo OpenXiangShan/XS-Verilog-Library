@@ -1,0 +1,11 @@
++incdir+../rtl
+
+../rtl/fpdiv_scalar_r64.sv
+../rtl/lzc.sv
+../rtl/r4_qds_v0.sv
+../rtl/r4_qds_v1.sv
+../rtl/r4_qds_v2.sv
+../rtl/r4_qds_v2_with_speculation.sv
+../rtl/fpdiv_r64_block.sv
+
+
