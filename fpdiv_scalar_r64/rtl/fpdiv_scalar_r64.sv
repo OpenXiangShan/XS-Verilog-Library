@@ -3,7 +3,7 @@
 // Author				: HYF
 // How to Contact		: hyf_sysu@qq.com
 // Created Time    		: 2022-01-04 09:09:21
-// Last Modified Time   : 2022-01-11 22:03:13
+// Last Modified Time   : 2022-01-12 11:04:19
 // ========================================================================================================
 // Description	:
 // A Scalar Floating Point Divider based on Minimally Redundant Radix-4 SRT Algorithm.
@@ -240,6 +240,7 @@ logic [FP32_FRAC_W-1:0] prescaled_b_frac_f32_f16;
 logic [(FP64_FRAC_W+4)-1:0] scaled_a_frac;
 logic [(FP64_FRAC_W+4)-1:0] scaled_b_frac;
 
+logic a_frac_lt_b_frac_real;
 logic a_frac_lt_b_frac;
 logic a_frac_lt_b_frac_l_shifted;
 logic a_frac_lt_b_frac_f32_f16;
@@ -374,8 +375,9 @@ logic guard_bit_quo_m1;
 logic round_bit_quo_m1;
 logic sticky_bit_quo_m1;
 logic inexact_quo_m1;
-logic quo_need_rup_m1;
+logic quo_m1_need_rup;
 logic [(FP64_FRAC_W - 1)-1:0] quo_m1_rounded;
+logic inexact;
 
 logic [(FP64_FRAC_W - 1)-1:0] frac_rounded_post_0;
 logic carry_after_round;
