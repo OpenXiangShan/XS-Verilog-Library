@@ -39,14 +39,24 @@ _So the latency could be reduced by 9/4/2 for F64/F32/F16._
 
 # Performance Comparison With Mainstream CPUs (Assuming normal inputs and normal result)
 
-||F16|F32|F64|
-|------|------|------|------|
-|**This design**|**4**|**6**|**12**|
-|Intel Coeffee Lake|x|11|13~14|
-|AMD Zen3/Zen2|x|10|13|
-|AMD Jaguar|x|14|19|
-|ARM Cortex A55, and other "small cores"|8|13|22|
-|ARM Cortex A76, and its successors|7|7 ~ 10|7 ~ 15|
-|ARM Cortex A75|6 ~ 8|6 ~ 10|6 ~ 15|
-|ARM Cortex A72|x|6 ~ 11|6 ~ 18|
-|ARM Cortex A57|x|7 ~ 17|7 ~ 32|
+|CPU|Algorithm|F16|F32|F64|
+|------|------|------|------|------|
+|**This design**|**Radix-64 SRT**|**4**|**6**|**12**|
+|Intel Coeffee Lake[^intel]|Radix-1024 SRT|x|11|13 ~ 14|
+|AMD Zen3/Zen2[^amd]|Unknown, guess it also use some kinds of SRT|x|10|13|
+|AMD Jaguar|Multiplicative|x|14|19|
+|ARM Cortex A55, and other "small cores"[^arm]|Radix-8 SRT|8|13|22|
+|ARM Cortex A76, and its successors[^arm]|Radix-64 SRT|7|7 ~ 10|7 ~ 15|
+|ARM Cortex A75[^arm]|Radix-64 SRT|6 ~ 8|6 ~ 10|6 ~ 15|
+|ARM Cortex A72[^arm]|Radix-16 SRT|x|6 ~ 11|6 ~ 18|
+|ARM Cortex A57[^arm]|Radix-4 SRT|x|7 ~ 17|7 ~ 32|
+|IBM Z13|Radix-4 SRT|x|23|37|
+|HAL Sparc|Multiplicative|x|16|19|
+|OpenC910[^c910]|Radix-16 SRT|4 ~ 7|4 ~ 10|4 ~ 17|
+
+
+[^intel]: https://www.agner.org/optimize/instruction_tables.pdf
+[^amd]: https://www.amd.com/en/support/tech-docs
+[^arm]: https://developer.arm.com/documentation
+[^c910]: https://github.com/T-head-Semi/openc910
+
