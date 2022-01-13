@@ -41,9 +41,9 @@ _So the latency could be reduced by 9/4/2 for F64/F32/F16._
 
 ||F16|F32|F64|
 |------|------|------|------|
-|This design|4|6|12|
+|**This design**|**4**|**6**|**12**|
 |Intel Coeffee Lake|x|11|13~14|
-|AMD Zen3/Zen3|x|10|13|
+|AMD Zen3/Zen2|x|10|13|
 |AMD Jaguar|x|14|19|
 |ARM Cortex A55, and other "small cores"|8|13|22|
 |ARM Cortex A76, and its successors|7|7 ~ 10|7 ~ 15|
