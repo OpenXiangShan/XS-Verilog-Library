@@ -292,7 +292,7 @@ end
 // PRE_PROCESS_1: r_shift the dividend for "dividend_too_small/divisor_is_zero".
 // POST_PROCESS_1: If "dividend_too_small/divisor_is_zero", we should not do any r_shift. Because we have already put dividend into the correct position
 // in PRE_PROCESS_1.
-assign post_r_shift_num = fsm_q[FSM_PRE_1_BIT] ? dividend_lzc_q : ((dividend_too_small_q | divisor_is_zero) ? {(LZC_WIDTH){1'b0}} : divisor_lzc_q);
+assign post_r_shift_num = fsm_q[FSM_PRE_1_BIT] ? dividend_lzc_q[LZC_WIDTH-1:0] : ((dividend_too_small_q | divisor_is_zero) ? {(LZC_WIDTH){1'b0}} : divisor_lzc_q[LZC_WIDTH-1:0]);
 assign post_r_shift_data_in = fsm_q[FSM_PRE_1_BIT] ? dividend_abs_q[WIDTH-1:0] : pre_shifted_rem[WIDTH-1:0];
 assign post_r_shift_extend_msb = fsm_q[FSM_POST_1_BIT] & rem_sign_q & pre_shifted_rem[WIDTH];
 
