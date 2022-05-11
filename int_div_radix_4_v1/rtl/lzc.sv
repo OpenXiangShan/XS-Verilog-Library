@@ -56,8 +56,8 @@ module lzc #(
     // pragma translate_on
 
     logic [WIDTH-1:0][NumLevels-1:0] index_lut;
-    logic [2**NumLevels-1:0] sel_nodes;
-    logic [2**NumLevels-1:0][NumLevels-1:0] index_nodes;
+    logic [2**NumLevels-1:0] sel_nodes /*verilator split_var*/;
+    logic [2**NumLevels-1:0][NumLevels-1:0] index_nodes /*verilator split_var*/;
 
     logic [WIDTH-1:0] in_tmp;
 
